@@ -24,22 +24,24 @@ export const mockData = {
     { stage: 'Complete', count: 12, value: 36000, color: 'gray' }
   ],
   clients: [
-    { id: 1, name: 'Sarah Miller', company: 'Acme Corp', email: 'sarah@acme.com', projects: 2, revenue: 18500, lastActivity: '2 days ago', status: 'Active', color: 'green' },
-    { id: 2, name: 'John Chen', company: '', email: 'john@email.com', projects: 0, revenue: 0, lastActivity: '1 week ago', status: 'Lead', color: 'amber' },
-    { id: 3, name: 'Lisa Park', company: 'BrandCo', email: 'lisa@brandco.com', projects: 1, revenue: 8200, lastActivity: '3 days ago', status: 'Active', color: 'green' },
-    { id: 4, name: 'Mike Torres', company: 'StartupXYZ', email: 'mike@sxyz.io', projects: 0, revenue: 24000, lastActivity: '2 months ago', status: 'Past', color: 'gray' }
+    { id: 'c1', name: 'Alara Vane', company: 'Nova Labs', email: 'alara@nova.io', projects: 2, revenue: 24500, lastActivity: '2 hours ago', status: 'Active', color: 'green' },
+    { id: 'c2', name: 'Julian Thorne', company: 'Eclipse Media', email: 'julian@eclipse.com', projects: 1, revenue: 12000, lastActivity: '1 day ago', status: 'Active', color: 'green' },
+    { id: 'c3', name: 'Sana Kothari', company: 'Lumina Arch', email: 'sana@lumina.design', projects: 0, revenue: 0, lastActivity: '3 days ago', status: 'Lead', color: 'amber' },
+    { id: 'c4', name: 'Marcus Flint', company: 'Ironstone', email: 'marcus@ironstone.co', projects: 3, revenue: 42000, lastActivity: '1 month ago', status: 'Past', color: 'gray' }
   ],
-  pipelineProjects: [
-    { id: 1, name: 'Website for CaféNoir', client: 'Lisa Park', value: 3000, dateAdded: 'Apr 8', status: 'Active', stage: 'Lead' },
-    { id: 2, name: 'Logo Design', client: 'Mike Torres', value: 1500, dateAdded: 'Apr 5', status: 'Needs follow-up', stage: 'Lead' },
-    { id: 3, name: 'Brand Guidelines', client: 'John Chen', value: 3500, dateAdded: 'Apr 1', status: 'Active', stage: 'Proposal Sent' },
-    { id: 4, name: 'E-commerce Setup', client: 'Sarah Miller', value: 6500, dateAdded: 'Mar 28', status: 'Active', stage: 'Negotiation' },
-    { id: 5, name: 'Website Redesign', client: 'Acme Corp', value: 8000, dateAdded: 'Mar 15', status: 'Active', stage: 'Active' },
-    { id: 6, name: 'Landing Page', client: 'StartupXYZ', value: 2400, dateAdded: 'Feb 10', status: 'Completed', stage: 'Completed' }
+  projects: [
+    { id: 'p1', name: 'Neural Interface UI', client: 'Nova Labs', value: 15000, dateAdded: 'Apr 10', status: 'Active', stage: 'Active', category: 'Product Design' },
+    { id: 'p2', name: 'Brand Rebirth 2026', client: 'Eclipse Media', value: 12000, dateAdded: 'Apr 15', status: 'Active', stage: 'Active', category: 'Branding' },
+    { id: 'p3', name: 'SaaS Dashboard v3', client: 'Lumina Arch', value: 8500, dateAdded: 'Apr 20', status: 'Active', stage: 'Proposal', category: 'Web App' }
+  ],
+  tasks: [
+    { id: 't1', title: 'Refine high-fidelity components', project: 'Neural Interface UI', priority: 'high', status: 'todo' },
+    { id: 't2', title: 'Draft brand audit report', project: 'Brand Rebirth 2026', priority: 'medium', status: 'todo' },
+    { id: 't3', title: 'Schedule stakeholder interview', project: 'SaaS Dashboard v3', priority: 'low', status: 'done' }
   ],
   invoices: [
-    { id: 'INV-1024', client: 'Acme Corp', project: 'Website Redesign', amount: 4500, issued: 'Apr 12, 2026', due: 'Apr 27, 2026', status: 'Paid', statusColor: 'green' },
-    { id: 'INV-1025', client: 'Lisa Park', project: 'Brand Guidelines', amount: 1200, issued: 'Apr 20, 2026', due: 'May 05, 2026', status: 'Pending', statusColor: 'amber' },
-    { id: 'INV-1026', client: 'Sarah Miller', project: 'E-commerce Setup', amount: 3500, issued: 'Apr 05, 2026', due: 'Apr 20, 2026', status: 'Overdue', statusColor: 'danger' }
+    { id: 'INV-2026-001', client: 'Nova Labs', project: 'Neural Interface UI', amount: 7500, issued: 'Apr 12, 2026', due: 'Apr 27, 2026', status: 'Paid', statusColor: 'green' },
+    { id: 'INV-2026-002', client: 'Eclipse Media', project: 'Brand Rebirth 2026', amount: 6000, issued: 'Apr 20, 2026', due: 'May 05, 2026', status: 'Pending', statusColor: 'amber' },
+    { id: 'INV-2026-003', client: 'Nova Labs', project: 'Neural Interface UI', amount: 7500, issued: 'May 01, 2026', due: 'May 15, 2026', status: 'Pending', statusColor: 'amber' }
   ]
 };

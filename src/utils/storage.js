@@ -67,28 +67,101 @@ function getPrefixedKey(key) {
   return `live_${key}`;
 }
 
-// ── User Management ──────────────────────────────────────────────────────────
+// ── API Helpers ─────────────────────────────────────────────────────────────
 
-export function getUser(username) {
-  const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
-  return users[username] || null;
+const API_BASE = '/api';
+
+async function apiFetch(endpoint, options = {}) {
+  const token = localStorage.getItem('vtx_jwt');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers
+  };
+
+  const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'API request failed');
+  }
+  return response.json();
 }
 
-export function createUser(userData) {
+export async function apiRegister(userData) {
+  const data = await apiFetch('/register', {
+    method: 'POST',
+    body: JSON.stringify(userData)
+  });
+  if (data.token) localStorage.setItem('vtx_jwt', data.token);
+  return data;
+}
+
+export async function apiLogin(email, password) {
+  const data = await apiFetch('/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+  if (data.token) localStorage.setItem('vtx_jwt', data.token);
+  return data;
+}
+
+export async function apiGetProfile() {
+  const data = await apiFetch('/user');
+  return data.user;
+}
+
+// ── User Management ──────────────────────────────────────────────────────────
+
+export async function getUser(username) {
+  // First check local storage for offline support/caching
   const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
-  const newUser = {
-    ...userData,
-    createdAt: new Date().toISOString()
-  };
-  users[userData.username] = newUser;
-  localStorage.setItem(KEYS.USERS, JSON.stringify(users));
-  return newUser;
+  if (users[username]) return users[username];
+
+  // Then try API
+  try {
+    const profile = await apiGetProfile();
+    if (profile) {
+      // Cache it
+      users[username] = profile;
+      localStorage.setItem(KEYS.USERS, JSON.stringify(users));
+      return profile;
+    }
+  } catch (err) {
+    console.error('Failed to fetch user from API:', err);
+  }
+  return null;
+}
+
+export async function createUser(userData) {
+  // 1. Register via API
+  try {
+    const response = await apiRegister(userData);
+    const newUser = {
+      ...userData,
+      id: response.user?.id,
+      createdAt: new Date().toISOString()
+    };
+
+    // 2. Cache in LocalStorage
+    const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
+    users[userData.username] = newUser;
+    localStorage.setItem(KEYS.USERS, JSON.stringify(users));
+    
+    return newUser;
+  } catch (err) {
+    console.error('Registration failed:', err);
+    throw err;
+  }
 }
 
 export function hasAnyUser() {
   const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
-  return Object.keys(users).length > 0;
+  const hasLocal = Object.keys(users).length > 0;
+  const hasToken = !!localStorage.getItem('vtx_jwt');
+  return hasLocal || hasToken;
 }
+
+// ... rest of the file remains same for now to avoid total breakage ...
 
 // ── Generic Data Methods ─────────────────────────────────────────────────────
 
@@ -189,8 +262,14 @@ export function importStorageJSON(jsonData) {
   }
 }
 
-export function wipeStorage() {
+export async function wipeStorage() {
+  try {
+    await apiFetch('/user', { method: 'DELETE' });
+  } catch (err) {
+    console.error('Failed to purge remote data:', err);
+  }
   localStorage.clear();
+  sessionStorage.clear();
   console.log('VERTEX Instance Purged.');
 }
 

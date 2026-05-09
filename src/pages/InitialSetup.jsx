@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setContext, createUser, getTheme } from '../utils/storage';
+import { setContext, createUser, getTheme, saveData } from '../utils/storage';
+import { mockData } from '../utils/mockData';
 import { Shield, Sparkles, ArrowRight, Eye, EyeOff, CheckCircle, Palette, Terminal, Cpu } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ModeToggle } from '../components/ui/ModeToggle';
@@ -34,7 +35,8 @@ export function InitialSetup() {
     profession: '',
     domain: '',
     tools: '',
-    sentinelTone: 'professional' // professional | mystical | direct
+    sentinelTone: 'professional', // professional | mystical | direct
+    preLoadDemo: false
   });
 
   const handleNext = () => {
@@ -50,28 +52,40 @@ export function InitialSetup() {
     }
   };
 
-  const finalizeSetup = (e) => {
+  const finalizeSetup = async (e) => {
     e.preventDefault();
     if (!userForm.password) {
       setError('A master sequence (password) is required.');
       return;
     }
-    
-    // Save User (Solo Focus)
-    createUser({
-      ...userForm,
-      username: 'solo_admin', // Fixed internal username for solo focus
-      setupComplete: true,
-      sentinelData: {
-        domain: userForm.domain,
-        tools: userForm.tools,
-        tone: userForm.sentinelTone,
-        initializedAt: new Date().toISOString()
-      }
-    });
 
-    setContext('normal', 'solo_admin');
-    window.location.href = '/dashboard';
+    try {
+      // 1. Pre-load demo data if requested
+      if (userForm.preLoadDemo) {
+        if (mockData.clients) saveData('clients', mockData.clients);
+        if (mockData.invoices) saveData('invoices', mockData.invoices);
+        if (mockData.projects) saveData('projects', mockData.projects);
+        if (mockData.tasks) saveData('tasks', mockData.tasks);
+      }
+
+      // 2. Save User (Central DB via API)
+      await createUser({
+        ...userForm,
+        username: 'solo_admin', 
+        setupComplete: true,
+        sentinelData: {
+          domain: userForm.domain,
+          tools: userForm.tools,
+          tone: userForm.sentinelTone,
+          initializedAt: new Date().toISOString()
+        }
+      });
+
+      setContext('normal', 'solo_admin');
+      window.location.href = '/dashboard';
+    } catch (err) {
+      setError(err.message || 'Failed to initialize orbit.');
+    }
   };
 
   return (
@@ -175,6 +189,21 @@ export function InitialSetup() {
                   onChange={e => setUserForm({...userForm, tools: e.target.value})}
                 />
               </div>
+
+              <label className="flex items-center gap-sm cursor-pointer mt-sm group">
+                <div className="relative flex items-center">
+                  <input 
+                    type="checkbox" 
+                    className="peer sr-only"
+                    checked={userForm.preLoadDemo}
+                    onChange={e => setUserForm({ ...userForm, preLoadDemo: e.target.checked })}
+                  />
+                  <div className="w-5 h-5 border-2 border-border-color rounded transition-all peer-checked:bg-accent-primary peer-checked:border-accent-primary flex items-center justify-center">
+                    {userForm.preLoadDemo && <CheckCircle size={14} className="text-white" />}
+                  </div>
+                </div>
+                <span className="text-xs font-medium text-text-muted group-hover:text-text-secondary transition-colors">Pre-load environment with demo data</span>
+              </label>
             </div>
 
             {error && <p className="ob-error mt-md">{error}</p>}

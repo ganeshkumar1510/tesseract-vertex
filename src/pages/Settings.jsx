@@ -33,7 +33,7 @@ export function Settings() {
   const [isWipeModalOpen, setIsWipeModalOpen] = React.useState(false);
   const [wipeError, setWipeError] = React.useState('');
 
-  const handleWipeSubmit = (e) => {
+  const handleWipeSubmit = async (e) => {
     e.preventDefault();
     const pass = e.target.wipePassword.value;
     if (!pass) {
@@ -44,7 +44,7 @@ export function Settings() {
     const isValid = validateUserCredentials(username, pass);
     
     if (isValid) {
-      wipeStorage();
+      await wipeStorage();
       window.location.href = '/';
     } else {
       setWipeError('Master Sequence (Password) validation failed. Workspace remains locked.');
