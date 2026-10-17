@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { Card, CardHeader, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Download } from 'lucide-react';
@@ -8,6 +8,14 @@ import { getData, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
 
 export function Reports() {
+  // Re-render when workspace data or the user profile (currency) changes,
+  // so reports reflect edits without a full page reload (AC3.1.3).
+  const [, forceRender] = useReducer((n) => n + 1, 0);
+  useEffect(() => {
+    window.addEventListener('vertex-data-change', forceRender);
+    return () => window.removeEventListener('vertex-data-change', forceRender);
+  }, []);
+
   const clients = getData('clients') || [];
   const projects = getData('projects') || [];
   const invoices = getData('invoices') || [];
