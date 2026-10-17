@@ -268,7 +268,7 @@
   line-height: 1.4;
 }
 
-/* 🤖 Sentinel Styles */
+/* Client sentiment / vibe tracker */
 .sentiment-card {
   border: 1px solid var(--border-color);
   background: var(--bg-surface);
@@ -315,15 +315,6 @@
   color: var(--text-muted);
   border-top: 1px solid var(--border-color);
   padding-top: var(--space-sm);
-}
-
-.sentinel-insight-card {
-  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-primary) 100%);
-  border: 1px solid var(--accent-subtle);
-}
-
-.sentinel-insight-card .panel-title {
-  color: var(--accent-primary);
 }
 
 /* Project Dashboard Specifics */

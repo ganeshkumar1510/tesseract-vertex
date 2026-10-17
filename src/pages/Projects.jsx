@@ -6,7 +6,8 @@ import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Plus, Search, AlertCircle, ChevronRight } from 'lucide-react';
-import { getData, addDataItem, logActivity } from '../utils/storage';
+import { getData, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
+import { formatMoney } from '../utils/format';
 import './Projects.css';
 import './Clients.css';
 
@@ -17,6 +18,7 @@ export function Projects() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStatusFilter, setActiveStatusFilter] = useState('All');
+  const currency = getCurrency();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -39,7 +41,7 @@ export function Projects() {
     loadData();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
-      if (!key || key === 'projects' || key === 'clients') {
+      if (!key || key === 'projects' || key === 'clients' || key === 'user') {
         loadData();
       }
     };
@@ -138,6 +140,7 @@ export function Projects() {
       value: formData.value ? parseFloat(formData.value) : 0,
       deadline: formData.deadline || null,
       status: formData.status || 'In Progress',
+      stage: stageForStatus(formData.status || 'In Progress'),
       category: formData.category.trim() || 'General',
       createdAt: new Date().toISOString()
     };
@@ -205,7 +208,7 @@ export function Projects() {
         </Card>
         <Card className="project-metric-card">
           <span className="project-metric-label">Active Value</span>
-          <p className="project-metric-value">${metrics.activeValue.toLocaleString()}</p>
+          <p className="project-metric-value">{formatMoney(metrics.activeValue, currency)}</p>
           <span className="project-metric-sub">Contracted pipeline</span>
         </Card>
       </div>
@@ -299,7 +302,7 @@ export function Projects() {
                       )}
                     </td>
                     <td className="font-medium">
-                      ${(project.value || 0).toLocaleString()}
+                      {formatMoney(project.value || 0, currency)}
                     </td>
                     <td>
                       <Badge variant={badgeVariant}>{displayStatus}</Badge>

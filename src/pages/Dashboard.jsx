@@ -4,7 +4,9 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { mockData } from '../utils/mockData';
 import { Link } from 'react-router-dom';
-import { getContext, getLocalUser, getData, addDataItem, updateDataItem, logActivity, isDemoMode } from '../utils/storage';
+import { getContext, getLocalUser, getData, addDataItem, updateDataItem, logActivity, isDemoMode, stageForStatus } from '../utils/storage';
+import { bucketTasks } from '../utils/tasks';
+import { todayISO, formatMoney } from '../utils/format';
 import { Plus, Mail, Phone, FileText, ArrowRight, CheckCircle, Database } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
@@ -49,8 +51,16 @@ export function Dashboard() {
 
     // Merge tasks: user tasks take priority, mock agenda items only if not shadowed
     const storedTaskIds = new Set(tasks.map(t => t.id));
-    const demoAgendaItems = isDemo ? mockData.agenda.filter(a => !storedTaskIds.has(a.id)) : [];
+    const demoAgendaItems = isDemo
+      ? mockData.agenda
+          .filter(a => !storedTaskIds.has(a.id))
+          .map(a => ({ ...a, due: a.time ? `Today, ${a.time}` : 'Today' }))
+      : [];
     const combinedAgenda = [...tasks, ...demoAgendaItems];
+
+    // Single source of truth for due-date bucketing (shared with the Tasks page)
+    const agendaBuckets = bucketTasks(combinedAgenda);
+    const todayAgenda = [...agendaBuckets.overdue, ...agendaBuckets.today];
 
     const baseMetrics = isDemo ? mockData.metrics : {
       activeProjects: projects.filter(p => p.status !== 'Completed' && p.status !== 'Archived').length,
@@ -58,12 +68,12 @@ export function Dashboard() {
       revenueGrowth: 0,
       pendingInvoices: invoices.filter(i => i.status !== 'Paid').length,
       pendingAmount: pending,
-      tasksDueToday: combinedAgenda.filter(t => !t.done).length
+      tasksDueToday: todayAgenda.length
     };
 
     return {
       metrics: baseMetrics,
-      agenda: combinedAgenda.slice(0, 8),
+      agenda: todayAgenda.slice(0, 8),
       activities: [...activities, ...(isDemo ? mockData.activities : [])].slice(0, 5),
       pipelineSummary: isDemo ? mockData.pipelineSummary : [
         { stage: 'Lead', count: clients.filter(c => c.status === 'Lead').length, value: 0, color: 'purple' },
@@ -108,6 +118,7 @@ export function Dashboard() {
   const hours = new Date().getHours();
   const greeting = hours < 12 ? 'Good morning' : hours < 17 ? 'Good afternoon' : 'Good evening';
   const displayName = user.name?.split(' ')[0] || 'Freelancer';
+  const currency = user.currency || 'USD';
 
   // Modal Handlers
   const openModal = (type) => setActiveModal(type);
@@ -167,12 +178,12 @@ export function Dashboard() {
         </Card>
         <Card className="metric-card">
           <p className="metric-label">Revenue This Month</p>
-          <h2 className="metric-value">${sourceData.metrics.revenueThisMonth.toLocaleString()}</h2>
+          <h2 className="metric-value">{formatMoney(sourceData.metrics.revenueThisMonth, currency)}</h2>
           <span className="metric-trend positive">{isDemo ? `↑ ${sourceData.metrics.revenueGrowth}%` : 'Goal set'}</span>
         </Card>
         <Card className="metric-card">
           <p className="metric-label">Pending Invoices</p>
-          <h2 className="metric-value">${sourceData.metrics.pendingAmount.toLocaleString()}</h2>
+          <h2 className="metric-value">{formatMoney(sourceData.metrics.pendingAmount, currency)}</h2>
           <span className="metric-trend neutral"> outstanding</span>
         </Card>
         <Card className="metric-card">
@@ -252,7 +263,7 @@ export function Dashboard() {
                 <Badge variant={stage.color} className="stage-badge">
                   {stage.stage} ({stage.count})
                 </Badge>
-                <span className="stage-value">${stage.value.toLocaleString()}</span>
+                <span className="stage-value">{formatMoney(stage.value, currency)}</span>
               </div>
               {idx < sourceData.pipelineSummary.length - 1 && (
                 <div className="pipeline-edge"></div>
@@ -290,7 +301,8 @@ export function Dashboard() {
               client_id: selectedClient.id,
               client: selectedClient.company ? `${selectedClient.name} (${selectedClient.company})` : selectedClient.name,
               value: pVal, 
-              status: 'In Progress' 
+              status: 'In Progress',
+              stage: stageForStatus('In Progress')
             });
             logActivity('note', `Initialized project: ${pName}`, selectedClient.company || selectedClient.name);
             
@@ -323,7 +335,7 @@ export function Dashboard() {
         <form onSubmit={(e) => {
           e.preventDefault();
           const tTitle = e.target.tTitle.value;
-          const newTask = addDataItem('tasks', { title: tTitle, done: false });
+          const newTask = addDataItem('tasks', { title: tTitle, done: false, due: todayISO(), dueDate: todayISO(), priority: 'medium' });
           logActivity('note', `Scheduled task: ${tTitle}`);
           
           setTasks(prev => [...prev, newTask]);

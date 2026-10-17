@@ -4,12 +4,14 @@ import { Button } from '../components/ui/Button';
 import { Download } from 'lucide-react';
 import './Reports.css';
 
-import { getData } from '../utils/storage';
+import { getData, getCurrency } from '../utils/storage';
+import { formatMoney } from '../utils/format';
 
 export function Reports() {
   const clients = getData('clients') || [];
   const projects = getData('projects') || [];
   const invoices = getData('invoices') || [];
+  const currency = getCurrency();
 
   const totalValue = projects.reduce((sum, p) => sum + (p.value || 0), 0);
 
@@ -34,7 +36,7 @@ export function Reports() {
         <Card className="report-card">
           <CardHeader>Workspace Value</CardHeader>
           <CardContent className="centered-metric">
-            <h2 className="massive-number text-accent">${totalValue.toLocaleString()}</h2>
+            <h2 className="massive-number text-accent">{formatMoney(totalValue, currency)}</h2>
             <p className="metric-context">Combined value of all active pursuits</p>
           </CardContent>
         </Card>

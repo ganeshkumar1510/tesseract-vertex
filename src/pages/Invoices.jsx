@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/Badge';
 import { Plus, Send, Download, AlertCircle } from 'lucide-react';
 import { generateInvoicePDF } from '../utils/pdfGenerator';
 import { getLocalUser, getData, addDataItem, updateDataItem, getContext, logActivity } from '../utils/storage';
+import { formatMoney } from '../utils/format';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import './Invoices.css';
@@ -14,6 +15,7 @@ export function Invoices() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { username } = getContext();
   const user = getLocalUser(username);
+  const currency = user.currency || 'USD';
 
   const [invoices, setInvoices] = useState([]);
   const [clients, setClients] = useState([]);
@@ -46,7 +48,7 @@ export function Invoices() {
     loadAllData();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
-      if (!key || ['invoices', 'clients', 'projects'].includes(key)) {
+      if (!key || ['invoices', 'clients', 'projects', 'user'].includes(key)) {
         loadAllData();
       }
     };
@@ -184,13 +186,13 @@ export function Invoices() {
         </h1>
         <div className="invoice-stats">
           <div className="stats-item">
-            Total Outstanding: <span className="bold-value">${totalOutstanding.toLocaleString()}</span>
+            Total Outstanding: <span className="bold-value">{formatMoney(totalOutstanding, currency)}</span>
           </div>
           <div className="stats-item text-danger">
-            Overdue: <span className="bold-value text-danger">${totalOverdue.toLocaleString()}</span>
+            Overdue: <span className="bold-value text-danger">{formatMoney(totalOverdue, currency)}</span>
           </div>
           <div className="stats-item">
-            Paid: <span className="bold-value text-success">${totalPaid.toLocaleString()}</span>
+            Paid: <span className="bold-value text-success">{formatMoney(totalPaid, currency)}</span>
           </div>
         </div>
         <Button variant="primary" onClick={handleOpenModal}>
@@ -311,7 +313,7 @@ export function Invoices() {
                   <td className="font-mono font-medium">{inv.id}</td>
                   <td className="font-medium">{inv.client}</td>
                   <td className="text-secondary">{inv.project || 'General Service'}</td>
-                  <td className="font-mono font-semibold">${(Number(inv.amount) || 0).toLocaleString()}</td>
+                  <td className="font-mono font-semibold">{formatMoney(Number(inv.amount) || 0, currency)}</td>
                   <td className="text-secondary">{inv.issued}</td>
                   <td className={inv.status === 'Overdue' ? 'text-danger font-medium' : 'text-secondary'}>
                     {inv.due}

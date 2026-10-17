@@ -4,6 +4,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   useDraggable,
@@ -103,10 +104,12 @@ export function Pipeline() {
   const [dealForm, setDealForm] = useState(emptyDealForm);
   const [nameError, setNameError] = useState('');
   const [activeId, setActiveId] = useState(null);
+  const [dragError, setDragError] = useState('');
   const [currency, setCurrency] = useState(() => getLocalUser(getContext().username).currency || 'USD');
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor)
   );
 
   const reloadProjects = useCallback(() => {
@@ -170,13 +173,21 @@ export function Pipeline() {
   const handleDragEnd = (event) => {
     const { active, over } = event;
     setActiveId(null);
+    setDragError('');
     if (!over) return;
     const newStage = over.id;
     const project = projects.find(p => p.id === active.id);
     if (!project || project.stage === newStage) return;
     const updated = projects.map(p => p.id === active.id ? { ...p, stage: newStage } : p);
     setProjects(updated);
-    saveData('projects', updated);
+    try {
+      saveData('projects', updated);
+    } catch (err) {
+      console.error('Failed to persist deal stage change:', err);
+      // Revert the optimistic update so the UI never diverges from storage.
+      setProjects(projects);
+      setDragError(`Could not move "${project.title || project.name}" to ${newStage}. Please try again.`);
+    }
   };
 
   const handleDragCancel = () => setActiveId(null);
@@ -211,6 +222,35 @@ export function Pipeline() {
           </Button>
         </div>
       </div>
+
+      {dragError && (
+        <div
+          role="alert"
+          style={{
+            marginBottom: '12px',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            border: '1px solid rgba(239, 68, 68, 0.35)',
+            background: 'rgba(239, 68, 68, 0.12)',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <span>{dragError}</span>
+          <button
+            type="button"
+            onClick={() => setDragError('')}
+            aria-label="Dismiss error"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '16px', lineHeight: 1 }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {activeView === 'kanban' && (
         <div className="kanban-scroll-area">

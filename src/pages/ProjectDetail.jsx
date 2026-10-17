@@ -6,7 +6,8 @@ import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
-import { getData, updateDataItem, addDataItem, logActivity } from '../utils/storage';
+import { getData, updateDataItem, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
+import { formatMoney } from '../utils/format';
 import { 
   ArrowLeft, FileText, CheckSquare, Mail, 
   ChevronDown, Send, Plus
@@ -32,6 +33,7 @@ const VIBES = [
 export function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const currency = getCurrency();
 
   const [project, setProject] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -100,7 +102,7 @@ export function ProjectDetail() {
     loadProjectData();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
-      if (!key || ['projects', 'tasks', 'activities', 'invoices'].includes(key)) {
+      if (!key || ['projects', 'tasks', 'activities', 'invoices', 'user'].includes(key)) {
         loadProjectData();
       }
     };
@@ -273,7 +275,7 @@ export function ProjectDetail() {
               <select 
                 className="stage-select-overlay"
                 value={currentStatus}
-                onChange={(e) => handleUpdateProject({ status: e.target.value })}
+                onChange={(e) => handleUpdateProject({ status: e.target.value, stage: stageForStatus(e.target.value) })}
               >
                 {PROJECT_STATUSES.map(s => (
                   <option key={s.id} value={s.id}>{s.label}</option>
@@ -284,7 +286,7 @@ export function ProjectDetail() {
           
           <div className="project-quick-info">
             <span>Client: <strong className="text-primary">{project.client || 'General'}</strong></span>
-            <span>Value: <strong className="text-primary">${(project.value || 0).toLocaleString()}</strong></span>
+            <span>Value: <strong className="text-primary">{formatMoney(project.value || 0, currency)}</strong></span>
             <span>Created: <strong className="text-primary">{new Date(project.createdAt).toLocaleDateString()}</strong></span>
           </div>
           
@@ -495,7 +497,7 @@ export function ProjectDetail() {
                       {invoices.map(inv => (
                         <tr key={inv.id} className="client-row">
                           <td className="font-mono font-medium">{inv.id}</td>
-                          <td className="font-mono font-semibold">${(Number(inv.amount) || 0).toLocaleString()}</td>
+                          <td className="font-mono font-semibold">{formatMoney(Number(inv.amount) || 0, currency)}</td>
                           <td className="text-secondary">{inv.issued || '—'}</td>
                           <td className="text-secondary">{inv.due || '—'}</td>
                           <td>
@@ -534,15 +536,15 @@ export function ProjectDetail() {
           <div className="stats-grid">
             <div className="stat-item">
               <span className="stat-label">Contract Value</span>
-              <span className="stat-val">${(Number(project.value) || 0).toLocaleString()}</span>
+              <span className="stat-val">{formatMoney(Number(project.value) || 0, currency)}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Invoiced</span>
-              <span className="stat-val">${totalInvoiced.toLocaleString()}</span>
+              <span className="stat-val">{formatMoney(totalInvoiced, currency)}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Paid</span>
-              <span className="stat-val text-success">${totalPaid.toLocaleString()}</span>
+              <span className="stat-val text-success">{formatMoney(totalPaid, currency)}</span>
             </div>
           </div>
           <div style={{ height: 8, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 4, marginTop: 16, overflow: 'hidden', display: 'flex' }}>

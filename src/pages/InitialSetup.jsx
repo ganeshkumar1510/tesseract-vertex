@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
-import { setContext } from '../utils/storage';
+import { setContext, setStorageMode } from '../utils/storage';
 import { ArrowRight, Palette, Database, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ModeToggle } from '../components/ui/ModeToggle';
@@ -20,6 +20,7 @@ export function InitialSetup() {
   const [error, setError] = useState('');
   const [preLoadDemo, setPreLoadDemo] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [dbStatus, setDbStatus] = useState(null);
 
   useEffect(() => {
     // If setup is already complete, redirect to dashboard.
@@ -82,8 +83,12 @@ export function InitialSetup() {
       }
 
       const verifyData = await verifyRes.json();
-      if (verifyData.data?.schemaReady === false) {
-        console.warn(verifyData.data.hint || 'Database schema not migrated yet.');
+      const status = verifyData.data || {};
+      setDbStatus(status);
+      // Persist whether this workspace runs in cloud or local-only mode.
+      setStorageMode(status.configured ? 'cloud' : 'local');
+      if (status.schemaReady === false) {
+        console.warn(status.hint || 'Database schema not migrated yet.');
       }
 
       // 2. Pre-load demo data if requested
@@ -204,6 +209,30 @@ export function InitialSetup() {
             <p className="ob-sub mb-xl">
               {error ? 'Check your .env file and ensure the API server is running.' : 'Verifying database schema and provisioning your private environment.'}
             </p>
+
+            {!error && dbStatus && (
+              <div
+                className="w-full"
+                style={{
+                  marginBottom: '16px',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color, rgba(148,163,184,0.3))',
+                  fontSize: '13px',
+                  textAlign: 'left',
+                }}
+              >
+                <strong>Database status: </strong>
+                {dbStatus.configured
+                  ? (dbStatus.schemaReady ? `Connected (${dbStatus.method})` : `Connected, schema not ready (${dbStatus.method})`)
+                  : 'Not configured — running in local mode'}
+                {dbStatus.hint && (
+                  <span className="text-text-muted" style={{ display: 'block', marginTop: '4px' }}>
+                    {dbStatus.hint}
+                  </span>
+                )}
+              </div>
+            )}
 
             {error && (
               <div className="w-full">

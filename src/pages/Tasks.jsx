@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
-import { CheckSquare, Calendar, Kanban, Plus, MoreHorizontal, List, AlertCircle } from 'lucide-react';
+import { CheckSquare, Plus, MoreHorizontal, List, AlertCircle } from 'lucide-react';
 import { getData, addDataItem, updateDataItem, saveData, logActivity, isDemoMode } from '../utils/storage';
 import { todayISO } from '../utils/format';
+import { bucketTasks } from '../utils/tasks';
 import { mockData } from '../utils/mockData';
 import './Tasks.css';
 
@@ -86,53 +87,8 @@ export function Tasks() {
     return [...persistentTasks, ...demoAgendaItems];
   }, [persistentTasks, isDemo]);
 
-  const getTaskCategory = (task) => {
-    if (task.done) return 'completed';
-
-    const rawDue = task.dueDate || task.due;
-    if (!rawDue) return 'today';
-
-    const dueStr = String(rawDue).toLowerCase();
-    if (dueStr.includes('today') || dueStr.includes('all day')) return 'today';
-    if (dueStr.includes('overdue')) return 'overdue';
-
-    const dueDateObj = new Date(rawDue);
-    if (!isNaN(dueDateObj.getTime())) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const dueDay = new Date(dueDateObj);
-      dueDay.setHours(0, 0, 0, 0);
-
-      const diffTime = dueDay.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) return 'overdue';
-      if (diffDays === 0) return 'today';
-      if (diffDays <= 7) return 'thisWeek';
-    }
-
-    return 'today';
-  };
-
   const tasksByStatus = useMemo(() => {
-    const buckets = {
-      overdue: [],
-      today: [],
-      thisWeek: [],
-      completed: []
-    };
-
-    allTasks.forEach(task => {
-      const cat = getTaskCategory(task);
-      if (buckets[cat]) {
-        buckets[cat].push(task);
-      } else {
-        buckets.today.push(task);
-      }
-    });
-
-    return buckets;
+    return bucketTasks(allTasks);
   }, [allTasks]);
 
   const handleToggle = (id) => {
@@ -242,15 +198,18 @@ export function Tasks() {
     setMenuTaskId(null);
   };
 
-  const formatDueLabel = (task, isOverdue) => {
+  const formatDueLabel = (task) => {
     const raw = task.dueDate || task.due;
-    if (!raw) return 'Due Today';
-    if (String(raw).toLowerCase().includes('today') || String(raw).toLowerCase() === 'done') {
+    if (!raw) return 'No due date';
+    const rawStr = String(raw).toLowerCase();
+    if (rawStr === 'done') return 'Completed';
+    if (rawStr.includes('no due')) return 'No due date';
+    if (rawStr.includes('today') || rawStr.includes('all day')) {
       return `Due ${task.due || 'Today'}`;
     }
     const d = new Date(raw);
     if (!Number.isNaN(d.getTime())) {
-      return `${isOverdue ? 'Due' : 'Due'} ${d.toLocaleDateString()}`;
+      return `Due ${d.toLocaleDateString()}`;
     }
     return `Due ${raw}`;
   };
@@ -333,9 +292,9 @@ export function Tasks() {
             Tasks & Follow-ups <span className="count-badge">{allTasks.length}</span>
           </h1>
           <div className="view-toggles">
-            <button type="button" className="view-btn active"><List size={16} /></button>
-            <button type="button" className="view-btn"><Calendar size={16} /></button>
-            <button type="button" className="view-btn"><Kanban size={16} /></button>
+            {/* List is the only implemented view for Beta Mark - ii.
+                Calendar/Kanban toggles are hidden until implemented (no dead buttons). */}
+            <button type="button" className="view-btn active" aria-current="true" title="List view"><List size={16} /></button>
           </div>
         </div>
         <div className="header-right">
@@ -406,6 +365,32 @@ export function Tasks() {
                     <TaskRow key={t.id} task={{ ...t, due: t.due || 'This Week', client: t.client || 'General' }} isOverdue={false} />
                   ))
                 : <p className="empty-msg">No tasks due this week.</p>}
+            </div>
+          </div>
+        )}
+
+        {activeFilter === 'All' && tasksByStatus.upcoming.length > 0 && (
+          <div className="task-section">
+            <h3 className="section-title text-secondary">
+              Later <span className="count-badge">{tasksByStatus.upcoming.length}</span>
+            </h3>
+            <div className="tasks-list">
+              {tasksByStatus.upcoming.map(t => (
+                <TaskRow key={t.id} task={{ ...t, client: t.client || 'General' }} isOverdue={false} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeFilter === 'All' && tasksByStatus.unscheduled.length > 0 && (
+          <div className="task-section">
+            <h3 className="section-title text-secondary">
+              No Due Date <span className="count-badge">{tasksByStatus.unscheduled.length}</span>
+            </h3>
+            <div className="tasks-list">
+              {tasksByStatus.unscheduled.map(t => (
+                <TaskRow key={t.id} task={{ ...t, due: 'No due date', client: t.client || 'General' }} isOverdue={false} />
+              ))}
             </div>
           </div>
         )}

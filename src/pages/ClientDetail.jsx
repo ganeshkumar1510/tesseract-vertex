@@ -11,7 +11,8 @@ import {
   ArrowLeft, Mail, Phone, FileText, CheckSquare, 
   Calendar, Tag, Plus, ExternalLink, Users
 } from 'lucide-react';
-import { getData, addDataItem, logActivity } from '../utils/storage';
+import { getData, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
+import { formatMoney } from '../utils/format';
 import './DetailPages.css';
 import './Clients.css';
 
@@ -19,6 +20,7 @@ export function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const logInputRef = useRef(null);
+  const currency = getCurrency();
 
   const [client, setClient] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -86,7 +88,7 @@ export function ClientDetail() {
     loadClientData();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
-      if (!key || ['clients', 'projects', 'invoices', 'activities'].includes(key)) {
+      if (!key || ['clients', 'projects', 'invoices', 'activities', 'user'].includes(key)) {
         loadClientData();
       }
     };
@@ -145,6 +147,7 @@ export function ClientDetail() {
       value: newProjectValue ? parseFloat(newProjectValue) : 0,
       deadline: newProjectDeadline || null,
       status: 'In Progress',
+      stage: stageForStatus('In Progress'),
       createdAt: new Date().toISOString()
     });
 
@@ -396,7 +399,7 @@ export function ClientDetail() {
                             </Badge>
                           </td>
                           <td className="font-mono">
-                            ${(Number(p.value) || 0).toLocaleString()}
+                            {formatMoney(Number(p.value) || 0, currency)}
                           </td>
                           <td className={isOverdue ? 'text-danger font-medium' : 'text-secondary'}>
                             {p.deadline ? new Date(p.deadline).toLocaleDateString() : '—'}
@@ -431,13 +434,13 @@ export function ClientDetail() {
               <Card className="p-md">
                 <span className="text-xs text-secondary font-medium uppercase">Total Invoiced</span>
                 <p className="text-2xl font-bold font-mono text-text-primary mt-1">
-                  ${stats.totalInvoiced.toLocaleString()}
+                  {formatMoney(stats.totalInvoiced, currency)}
                 </p>
               </Card>
               <Card className="p-md">
                 <span className="text-xs text-secondary font-medium uppercase">Unpaid Balance</span>
                 <p className={`text-2xl font-bold font-mono mt-1 ${stats.unpaidBalance > 0 ? 'text-danger' : 'text-success'}`}>
-                  ${stats.unpaidBalance.toLocaleString()}
+                  {formatMoney(stats.unpaidBalance, currency)}
                 </p>
               </Card>
             </div>
@@ -460,7 +463,7 @@ export function ClientDetail() {
                       <tr key={inv.id} className="client-row">
                         <td className="font-mono font-medium">{inv.id}</td>
                         <td className="text-secondary">{inv.project || 'General Service'}</td>
-                        <td className="font-mono font-semibold">${(Number(inv.amount) || 0).toLocaleString()}</td>
+                        <td className="font-mono font-semibold">{formatMoney(Number(inv.amount) || 0, currency)}</td>
                         <td className="text-secondary">{inv.issued || '—'}</td>
                         <td className={inv.status === 'Overdue' ? 'text-danger font-medium' : 'text-secondary'}>
                           {inv.due || '—'}
@@ -560,7 +563,7 @@ export function ClientDetail() {
           <div className="stats-grid">
             <div className="stat-item">
               <span className="stat-label">Lifetime Revenue</span>
-              <span className="stat-val font-mono">${stats.lifetimeRevenue.toLocaleString()}</span>
+              <span className="stat-val font-mono">{formatMoney(stats.lifetimeRevenue, currency)}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Active Projects</span>
@@ -568,7 +571,7 @@ export function ClientDetail() {
             </div>
             <div className="stat-item">
               <span className="stat-label">Avg Project Value</span>
-              <span className="stat-val font-mono">${stats.avgProjectValue.toLocaleString()}</span>
+              <span className="stat-val font-mono">{formatMoney(stats.avgProjectValue, currency)}</span>
             </div>
           </div>
         </Card>

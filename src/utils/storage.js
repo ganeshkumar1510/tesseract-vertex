@@ -9,6 +9,7 @@ const KEYS = {
   ACTIVE_USERNAME: 'vtx_active_username',
   USERS: 'vtx_users', // Store created human users
   THEME: 'vtx_theme',
+  STORAGE_MODE: 'vtx_storage_mode', // 'local' | 'cloud' (null = unknown/legacy)
 };
 
 // ── Context Management ───────────────────────────────────────────────────────
@@ -32,6 +33,17 @@ export function getTheme() {
 export function setTheme(theme) {
   localStorage.setItem(KEYS.THEME, theme);
   document.documentElement.setAttribute('data-theme', theme);
+}
+
+// ── Storage Mode (local-only vs cloud) ───────────────────────────────────────
+
+/** Returns 'local', 'cloud', or null when unknown (legacy installs). */
+export function getStorageMode() {
+  return localStorage.getItem(KEYS.STORAGE_MODE);
+}
+
+export function setStorageMode(mode) {
+  if (mode) localStorage.setItem(KEYS.STORAGE_MODE, mode);
 }
 
 // ── Validation ───────────────────────────────────────────────────────────────
@@ -91,9 +103,37 @@ const PROJECT_STAGE_ALIASES = {
   Complete: 'Completed',
 };
 
-function normalizeProject(item) {
-  if (!item?.stage) return item;
-  const stage = PROJECT_STAGE_ALIASES[item.stage] || item.stage;
+/** Canonical Pipeline columns, in board order. */
+export const PIPELINE_STAGES = ['Lead', 'Proposal Sent', 'Negotiation', 'Active', 'Completed'];
+
+/**
+ * Derives a Pipeline stage for a project that has no explicit stage,
+ * based on its operational status. Keeps the Kanban board complete so
+ * projects created outside the Pipeline never silently disappear.
+ */
+export function stageForStatus(status) {
+  switch (String(status || '').toLowerCase()) {
+    case 'completed':
+    case 'archived':
+      return 'Completed';
+    case 'in progress':
+    case 'active':
+    case 'on hold':
+    case 'overdue':
+      return 'Active';
+    default:
+      return 'Lead';
+  }
+}
+
+/**
+ * Guarantees every project carries a valid Pipeline stage.
+ * Back-fills legacy / non-Pipeline records on read (normalization).
+ */
+export function normalizeProject(item) {
+  if (!item) return item;
+  const aliased = PROJECT_STAGE_ALIASES[item.stage] || item.stage;
+  const stage = aliased || stageForStatus(item.status);
   return stage === item.stage ? item : { ...item, stage };
 }
 
@@ -178,6 +218,11 @@ export function getLocalUser(username) {
   if (!resolved) return { ...DEFAULT_USER };
   const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
   return users[resolved] ? { ...DEFAULT_USER, ...users[resolved] } : { ...DEFAULT_USER };
+}
+
+/** Current workspace currency code (e.g. 'USD', 'INR'). Defaults to USD. */
+export function getCurrency() {
+  return getLocalUser(getContext().username).currency || 'USD';
 }
 
 export async function getUser(username) {
@@ -270,10 +315,11 @@ export function getData(key) {
   const useDemo = isDemoEnvironmentEnabled();
 
   if (useDemo) {
-    return mergeById(getMockItems(key), persisted);
+    const merged = mergeById(getMockItems(key), persisted);
+    return key === 'projects' ? merged.map(normalizeProject) : merged;
   }
 
-  return persisted;
+  return key === 'projects' ? persisted.map(normalizeProject) : persisted;
 }
 
 export function saveData(key, data) {

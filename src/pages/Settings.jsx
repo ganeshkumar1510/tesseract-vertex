@@ -299,7 +299,10 @@ export function Settings() {
             <Card className="settings-card">
               <CardHeader>Notifications</CardHeader>
               <CardContent>
-                <p className="coming-soon">Notification settings are coming in a future release.</p>
+                <p className="coming-soon">
+                  Notification controls are intentionally out of scope for the Beta Mark - ii stability release.
+                  Vertex does not send email or push notifications yet — no delivery channel is wired up.
+                </p>
               </CardContent>
             </Card>
           )}
@@ -308,7 +311,10 @@ export function Settings() {
             <Card className="settings-card">
               <CardHeader>Integrations</CardHeader>
               <CardContent>
-                <p className="coming-soon">Third-party integrations are planned for a future release.</p>
+                <p className="coming-soon">
+                  Third-party integrations are not part of the Beta Mark - ii stability release and no
+                  timeline is committed. Vertex currently keeps all data local to your workspace.
+                </p>
               </CardContent>
             </Card>
           )}

@@ -27,13 +27,14 @@ async function verifyDatabaseConnection() {
   if (prisma) {
     try {
       const schemaVersion = await prisma.settings.findFirst();
-      return { verified: true, method: 'prisma', schemaReady: true, schemaVersion };
+      return { configured: true, verified: true, method: 'prisma', schemaReady: true, schemaVersion };
     } catch (err) {
       console.warn('Prisma verification failed, checking database reachability:', err.message);
       try {
         await prisma.$queryRaw`SELECT 1`;
         // Database itself is reachable, but schema tables are not ready yet
         return {
+          configured: true,
           verified: true,
           method: 'prisma',
           schemaReady: false,
@@ -48,9 +49,15 @@ async function verifyDatabaseConnection() {
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    throw new Error(
-      'Database not configured. Set DATABASE_URL in .env (with your Supabase password), or set SUPABASE_URL and SUPABASE_ANON_KEY.'
-    );
+    // Nothing configured — this is a supported state (local-first mode).
+    // Report it explicitly instead of failing so the client can inform the user.
+    return {
+      configured: false,
+      verified: false,
+      method: 'none',
+      schemaReady: false,
+      hint: 'No database configured. Vertex will run in local-only mode (data stays in this browser). Set DATABASE_URL in .env to enable cloud sync.',
+    };
   }
 
   // Prisma creates quoted "Settings"; PostgREST also accepts lowercase.
@@ -68,6 +75,7 @@ async function verifyDatabaseConnection() {
   const schemaReady = !settingsError;
 
   return {
+    configured: true,
     verified: true,
     method: 'supabase',
     schemaReady,

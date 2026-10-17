@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
 let prisma = null;
+let bypassLogged = false;
 
 export function databaseUrlConfigured() {
   const url = process.env.DATABASE_URL || '';
@@ -10,7 +11,13 @@ export function databaseUrlConfigured() {
 }
 
 export function getPrisma() {
-  if (!databaseUrlConfigured()) return null;
+  if (!databaseUrlConfigured()) {
+    if (!bypassLogged) {
+      console.info('[vertex] DATABASE_URL not configured — Prisma disabled, running in local-only mode.');
+      bypassLogged = true;
+    }
+    return null;
+  }
   if (!prisma) {
     const connectionString = process.env.DATABASE_URL;
     const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
