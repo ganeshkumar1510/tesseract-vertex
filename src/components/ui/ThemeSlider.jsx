@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { getTheme, setTheme } from '../../utils/storage';
 import './ThemeSlider.css';
 
 export function ThemeSlider({ large = false }) {
-  const currentTheme = getTheme();
+  const [currentTheme, setCurrentTheme] = useState(() => getTheme());
   const isElegant = currentTheme === 'elegant';
 
   const toggleTheme = (e) => {
@@ -12,7 +12,7 @@ export function ThemeSlider({ large = false }) {
     const nextTheme = isElegant ? 'ether' : 'elegant';
     setTheme(nextTheme);
     document.documentElement.setAttribute('data-theme', nextTheme);
-    window.location.reload(); 
+    setCurrentTheme(nextTheme);
   };
 
   return (

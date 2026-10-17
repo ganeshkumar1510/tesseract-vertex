@@ -12,7 +12,6 @@ export function Reports() {
   const invoices = getData('invoices') || [];
 
   const totalValue = projects.reduce((sum, p) => sum + (p.value || 0), 0);
-  const activeCount = projects.filter(p => p.stage === 'Active').length;
 
   return (
     <div className="reports-page">

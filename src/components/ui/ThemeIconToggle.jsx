@@ -17,9 +17,7 @@ export function ThemeIconToggle() {
     const newTheme = isDark ? 'elegant' : 'ether';
     setTheme(newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
-    // Full reload to ensure all components that cached the theme on mount stay in sync
-    // (consistent with ThemeSlider behaviour)
-    window.location.reload();
+    setIsDark(!isDark);
   };
 
   return (

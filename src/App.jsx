@@ -4,6 +4,7 @@ import { useAppStore } from './store/useAppStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { Dashboard } from './pages/Dashboard';
 import { Clients } from './pages/Clients';
+import { Projects } from './pages/Projects';
 import { Pipeline } from './pages/Pipeline';
 import { Tasks } from './pages/Tasks';
 import { Invoices } from './pages/Invoices';
@@ -38,7 +39,7 @@ function CRMShell() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="clients" element={<Clients />} />
         <Route path="clients/:id" element={<ClientDetail />} />
-        <Route path="projects" element={<Pipeline />} />
+        <Route path="projects" element={<Projects />} />
         <Route path="projects/:id" element={<ProjectDetail />} />
         <Route path="pipeline" element={<Pipeline />} />
         <Route path="tasks" element={<Tasks />} />

@@ -11,7 +11,7 @@ export const verifyToken = (req, res, next) => {
     const verified = jwt.verify(token, getJwtSecret());
     req.user = verified;
     next();
-  } catch (err) {
+  } catch (_err) {
     res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token.' } });
   }
 };

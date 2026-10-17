@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Folder, Users, FileText, CheckSquare, X, Settings as SettingsIcon } from 'lucide-react';
-import { getData, getContext } from '../../utils/storage';
+import { Search, Folder, Users, FileText, CheckSquare, Settings as SettingsIcon } from 'lucide-react';
+import { getData } from '../../utils/storage';
 import './CommandPalette.css';
 
 const QUICK_ACTIONS = [
@@ -17,29 +17,39 @@ export function CommandPalette({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  const { mode, username } = getContext();
-  const basePath = mode === 'normal' ? `/${username}` : `/${mode}`;
-  
   // Data Fetching
-  const clients = getData('clients') || [];
-  const projects = getData('projects') || [];
+  const [clients, setClients] = useState([]);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setClients(getData('clients') || []);
+      setProjects(getData('projects') || []);
+    }
+  }, [isOpen]);
+
+  const handleAction = useCallback((path) => {
+    navigate(path);
+    onClose();
+    setQuery('');
+  }, [navigate, onClose]);
 
   const filteredResults = query ? [
-    ...clients.filter(c => c.name.toLowerCase().includes(query.toLowerCase())).map(c => ({
+    ...clients.filter(c => (c.name || '').toLowerCase().includes(query.toLowerCase())).map(c => ({
       id: `client-${c.id}`,
       label: c.name,
-      sub: 'Client',
+      sub: c.company ? `Client • ${c.company}` : 'Client',
       icon: <Users size={16} />,
-      path: `${basePath}/clients/${c.id}`
+      path: `/clients/${c.id}`
     })),
-    ...projects.filter(p => p.title.toLowerCase().includes(query.toLowerCase())).map(p => ({
+    ...projects.filter(p => (p.name || p.title || '').toLowerCase().includes(query.toLowerCase())).map(p => ({
       id: `project-${p.id}`,
-      label: p.title,
-      sub: 'Project',
+      label: p.name || p.title || 'Untitled Project',
+      sub: p.client ? `Project • ${p.client}` : 'Project',
       icon: <Folder size={16} />,
-      path: `${basePath}/projects/${p.id}`
+      path: `/projects/${p.id}`
     }))
-  ] : QUICK_ACTIONS.map(action => ({...action, path: `${basePath}${action.path}`}));
+  ] : QUICK_ACTIONS;
 
   const totalResults = filteredResults.length;
 
@@ -64,19 +74,13 @@ export function CommandPalette({ isOpen, onClose }) {
     };
     if (isOpen) window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, totalResults, selectedIndex, filteredResults]);
+  }, [isOpen, onClose, totalResults, selectedIndex, filteredResults, handleAction]);
 
   useEffect(() => {
     setSelectedIndex(0);
   }, [query]);
 
   if (!isOpen) return null;
-
-  const handleAction = (path) => {
-    navigate(path);
-    onClose();
-    setQuery('');
-  };
 
   return (
     <>

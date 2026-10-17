@@ -31,7 +31,7 @@ export function Clients() {
 
   const handleCreateClient = (e) => {
     e.preventDefault();
-    const newClient = addDataItem('clients', {
+    addDataItem('clients', {
       name: formData.name,
       email: formData.email || null,
       company: formData.company || null,

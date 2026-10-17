@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { mockData } from '../utils/mockData';
 import { Link } from 'react-router-dom';
-import { getContext, getLocalUser, getData, addDataItem, logActivity, isDemoMode } from '../utils/storage';
+import { getContext, getLocalUser, getData, addDataItem, updateDataItem, logActivity, isDemoMode } from '../utils/storage';
 import { Plus, Mail, Phone, FileText, ArrowRight, CheckCircle, Database } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
@@ -12,7 +12,7 @@ import './Dashboard.css';
 
 export function Dashboard() {
   const { mode, username } = getContext();
-  const user = getLocalUser(username);
+  const [user, setUser] = useState(() => getLocalUser(username));
   const isDemo = isDemoMode();
   
   // Modals
@@ -25,33 +25,45 @@ export function Dashboard() {
   const [activities, setActivities] = useState([]);
   const [invoices, setInvoices] = useState([]);
 
-  React.useEffect(() => {
-    const c = getData('clients') || [];
-    const p = getData('projects') || [];
-    const t = getData('tasks') || [];
-    setClients(c);
-    setProjects(p);
-    setTasks(t);
+  const loadDashboardData = useCallback(() => {
+    setUser(getLocalUser(getContext().username));
+    setClients(getData('clients') || []);
+    setProjects(getData('projects') || []);
+    setTasks(getData('tasks') || []);
     setActivities(getData('activities') || []);
     setInvoices(getData('invoices') || []);
   }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+    const handleDataChange = () => {
+      loadDashboardData();
+    };
+    window.addEventListener('vertex-data-change', handleDataChange);
+    return () => window.removeEventListener('vertex-data-change', handleDataChange);
+  }, [loadDashboardData]);
 
   const sourceData = useMemo(() => {
     const revenue = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + (i.amount || 0), 0);
     const pending = invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + (i.amount || 0), 0);
 
+    // Merge tasks: user tasks take priority, mock agenda items only if not shadowed
+    const storedTaskIds = new Set(tasks.map(t => t.id));
+    const demoAgendaItems = isDemo ? mockData.agenda.filter(a => !storedTaskIds.has(a.id)) : [];
+    const combinedAgenda = [...tasks, ...demoAgendaItems];
+
     const baseMetrics = isDemo ? mockData.metrics : {
-      activeProjects: projects.length,
+      activeProjects: projects.filter(p => p.status !== 'Completed' && p.status !== 'Archived').length,
       revenueThisMonth: revenue,
       revenueGrowth: 0,
       pendingInvoices: invoices.filter(i => i.status !== 'Paid').length,
       pendingAmount: pending,
-      tasksDueToday: tasks.filter(t => !t.done).length
+      tasksDueToday: combinedAgenda.filter(t => !t.done).length
     };
 
     return {
       metrics: baseMetrics,
-      agenda: [...tasks.filter(t => !t.done), ...(isDemo ? mockData.agenda : [])].slice(0, 5),
+      agenda: combinedAgenda.slice(0, 8),
       activities: [...activities, ...(isDemo ? mockData.activities : [])].slice(0, 5),
       pipelineSummary: isDemo ? mockData.pipelineSummary : [
         { stage: 'Lead', count: clients.filter(c => c.status === 'Lead').length, value: 0, color: 'purple' },
@@ -67,10 +79,30 @@ export function Dashboard() {
   }, [sourceData.agenda]);
 
   const toggleTask = (id) => {
-    // Note: In a real app we'd update storage too
-    setAgenda(prev => prev.map(task => 
-      task.id === id ? { ...task, done: !task.done } : task
-    ));
+    const task = agenda.find(t => t.id === id);
+    if (!task) return;
+
+    const nextDone = !task.done;
+    setAgenda(prev => prev.map(t => t.id === id ? { ...t, done: nextDone } : t));
+
+    const existingInTasks = tasks.some(t => t.id === id);
+    if (existingInTasks) {
+      updateDataItem('tasks', id, { 
+        done: nextDone, 
+        completedAt: nextDone ? new Date().toISOString() : null 
+      });
+    } else {
+      // Mock agenda item toggled for the first time -> persist into tasks
+      addDataItem('tasks', {
+        ...task,
+        done: nextDone,
+        completedAt: nextDone ? new Date().toISOString() : null
+      });
+    }
+
+    if (nextDone) {
+      logActivity('note', `Completed task: ${task.title}`);
+    }
   };
 
   const hours = new Date().getHours();
@@ -240,23 +272,51 @@ export function Dashboard() {
       </Modal>
 
       <Modal isOpen={activeModal === 'project'} onClose={closeModal} title="Create New Project">
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          const pTitle = e.target.pTitle.value;
-          const pVal = parseInt(e.target.pValue.value || '0');
-          const newProject = addDataItem('projects', { title: pTitle, value: pVal, stage: 'Lead' });
-          logActivity('note', `Initialized project: ${pTitle}`);
-          
-          setProjects(prev => [...prev, newProject]);
-          setActivities(prev => [{ id: Date.now(), type: 'note', description: `Initialized project: ${pTitle}`, time: 'Just now' }, ...prev]);
-          
-          closeModal();
-          e.target.reset();
-        }} className="flex-col gap-md">
-          <Input name="pTitle" placeholder="Project Title" autoFocus required />
-          <Input name="pValue" placeholder="Estimated Value ($)" type="number" />
-          <Button type="submit">Initialize Project</Button>
-        </form>
+        {clients.length === 0 ? (
+          <div className="flex-col gap-md">
+            <p className="text-secondary">No clients found. Please create a client first.</p>
+            <Button variant="primary" onClick={() => openModal('client')}>Add Client First</Button>
+          </div>
+        ) : (
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const pName = e.target.pTitle.value;
+            const clientId = e.target.pClient.value;
+            const pVal = parseInt(e.target.pValue.value || '0', 10);
+            const selectedClient = clients.find(c => c.id === clientId) || clients[0];
+
+            const newProject = addDataItem('projects', { 
+              name: pName,
+              client_id: selectedClient.id,
+              client: selectedClient.company ? `${selectedClient.name} (${selectedClient.company})` : selectedClient.name,
+              value: pVal, 
+              status: 'In Progress' 
+            });
+            logActivity('note', `Initialized project: ${pName}`, selectedClient.company || selectedClient.name);
+            
+            setProjects(prev => [...prev, newProject]);
+            setActivities(prev => [{ id: Date.now(), type: 'note', description: `Initialized project: ${pName}`, time: 'Just now' }, ...prev]);
+            
+            closeModal();
+            e.target.reset();
+          }} className="flex-col gap-md">
+            <Input name="pTitle" placeholder="Project Title" autoFocus required />
+            <div>
+              <label className="text-xs text-secondary font-medium block mb-1">Select Client *</label>
+              <select 
+                name="pClient" 
+                className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none"
+                required
+              >
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} {c.company ? `(${c.company})` : ''}</option>
+                ))}
+              </select>
+            </div>
+            <Input name="pValue" placeholder="Estimated Value ($)" type="number" />
+            <Button type="submit">Initialize Project</Button>
+          </form>
+        )}
       </Modal>
 
       <Modal isOpen={activeModal === 'task'} onClose={closeModal} title="Schedule Task / Activity">

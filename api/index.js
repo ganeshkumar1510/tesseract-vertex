@@ -3,7 +3,7 @@ import express from 'express';
 import { verifyToken } from './middleware/auth.js';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
-import { databaseUrlConfigured, getPrisma } from './prisma.js';
+import { getPrisma } from './prisma.js';
 import { getJwtSecret, getMasterPassword } from './env.js';
 
 const app = express();

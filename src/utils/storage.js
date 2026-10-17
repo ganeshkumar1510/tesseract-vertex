@@ -169,6 +169,7 @@ const DEFAULT_USER = {
   bio: '',
   profession: '',
   workspace: 'VERTEX Studio',
+  currency: 'USD',
 };
 
 /** Synchronous profile for UI — reads cached local user only. */
@@ -228,6 +229,32 @@ export function hasAnyUser() {
   return hasLocal || hasToken;
 }
 
+/** Merge-patch the local user profile. Preserves password, id, createdAt. */
+export function saveUser(username, patch = {}) {
+  const resolved = username ?? getContext().username;
+  if (!resolved) return null;
+  const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
+  const existing = users[resolved] || {};
+  users[resolved] = {
+    ...DEFAULT_USER,
+    ...existing,
+    ...patch,
+    password: Object.prototype.hasOwnProperty.call(patch, 'password')
+      ? patch.password
+      : existing.password,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    username: existing.username || resolved,
+  };
+  localStorage.setItem(KEYS.USERS, JSON.stringify(users));
+  notifyDataChange('user');
+  return users[resolved];
+}
+
+export function notifyWorkspaceChange() {
+  ['clients', 'projects', 'tasks', 'invoices', 'activities', 'user'].forEach(notifyDataChange);
+}
+
 // ... rest of the file remains same for now to avoid total breakage ...
 
 // ── Generic Data Methods ─────────────────────────────────────────────────────
@@ -239,7 +266,6 @@ function notifyDataChange(key) {
 }
 
 export function getData(key) {
-  const { mode } = getContext();
   const persisted = readPersisted(key);
   const useDemo = isDemoEnvironmentEnabled();
 
@@ -264,14 +290,17 @@ export function addDataItem(key, item) {
 }
 
 export function updateDataItem(key, id, updates) {
-  const items = getData(key) || [];
-  const index = items.findIndex(item => item.id === id);
+  const persisted = readPersisted(key);
+  const index = persisted.findIndex(item => item.id === id);
   if (index !== -1) {
-    items[index] = { ...items[index], ...updates, updatedAt: new Date().toISOString() };
-    saveData(key, items);
-    return items[index];
+    persisted[index] = { ...persisted[index], ...updates, updatedAt: new Date().toISOString() };
+    saveData(key, persisted);
+    return persisted[index];
   }
-  return null;
+
+  const merged = (getData(key) || []).find(item => item.id === id);
+  if (!merged) return null;
+  return addDataItem(key, { ...merged, ...updates, id });
 }
 
 export function addClient(clientData) {
@@ -329,6 +358,7 @@ export function importStorageJSON(jsonData) {
         localStorage.setItem(key, data[key]);
       }
     });
+    notifyWorkspaceChange();
     return true;
   } catch (e) {
     console.error('Import failed:', e);

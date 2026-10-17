@@ -5,7 +5,6 @@ import {
   CheckSquare, FileText, PieChart, 
   Settings 
 } from 'lucide-react';
-import { getContext } from '../../utils/storage';
 import { useMode } from '../providers/ModeProvider';
 import { Logo } from '../ui/Logo';
 import { cn } from '../../lib/utils';

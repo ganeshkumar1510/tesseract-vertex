@@ -11,7 +11,7 @@ export function UATControls() {
     if (window.confirm('This will clear all temporary test data and return you to the onboarding screen. Proceed?')) {
       clearTestContext();
       logout();
-      navigate('/onboarding');
+      navigate('/setup');
     }
   };
 

@@ -200,3 +200,121 @@
   font-size: 13px;
   background-color: transparent;
 }
+
+.kanban-column.drag-over {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.kanban-column.drag-over .empty-column,
+.kanban-column.drag-over .kanban-cards {
+  border-color: var(--accent-primary);
+}
+
+.kanban-card-wrap.is-dragging .kanban-card {
+  opacity: 0.35;
+}
+
+.drag-overlay-card {
+  opacity: 0.85;
+  box-shadow: var(--shadow-lg);
+  cursor: grabbing;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+.pipeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pipeline-list-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-md);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.pipeline-list-row:hover {
+  border-color: var(--accent-primary);
+}
+
+.list-title { font-weight: 600; }
+.list-stage, .list-client, .list-value { color: var(--text-secondary); font-size: 13px; }
+
+.pipeline-table-wrap {
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.pipeline-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pipeline-table th,
+.pipeline-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+}
+
+.pipeline-table th {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pipeline-table tbody tr {
+  cursor: pointer;
+}
+
+.pipeline-table tbody tr:hover {
+  background: var(--neutral-light);
+}
+
+.pipeline-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pipeline-page .form-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.pipeline-page .form-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color-bright);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-elevated);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+}

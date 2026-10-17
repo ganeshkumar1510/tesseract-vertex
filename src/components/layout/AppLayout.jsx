@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import { AIPanel } from './AIPanel';
 import { CommandPalette } from './CommandPalette';
 import { UATControls } from './UATControls';
 import { MobileNav } from './MobileNav';
@@ -11,7 +10,6 @@ import { useAppStore } from '../../store/useAppStore';
 import './AppLayout.css';
 
 export function AppLayout() {
-  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const { mode } = getContext();
@@ -39,9 +37,8 @@ export function AppLayout() {
     <div className="flex h-screen w-screen overflow-hidden bg-canvas">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 relative overflow-hidden">
-        <Topbar 
-          onOpenAI={() => setIsAIPanelOpen(true)} 
-          onOpenSearch={() => setIsSearchOpen(true)} 
+        <Topbar
+          onOpenSearch={() => setIsSearchOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-lg lg:p-xl">
           <Outlet />
@@ -50,7 +47,6 @@ export function AppLayout() {
       </div>
 
       {mode === 'test' && <UATControls />}
-      <AIPanel isOpen={isAIPanelOpen} onClose={() => setIsAIPanelOpen(false)} />
       <CommandPalette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );

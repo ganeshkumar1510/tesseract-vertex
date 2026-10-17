@@ -26,7 +26,7 @@ const sizeConfig = {
 }
 
 export function ModeToggle({ size = 'default', className }) {
-  const { mode, toggle, isAether } = useMode()
+  const { toggle, isAether } = useMode()
   const config = sizeConfig[size] || sizeConfig.default
 
   return (

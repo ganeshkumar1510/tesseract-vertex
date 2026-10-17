@@ -1,5 +1,4 @@
 import React from 'react'
-import { cn } from '../../lib/utils'
 
 export function EmptyState({ icon: Icon, title, description, action }) {
   return (
