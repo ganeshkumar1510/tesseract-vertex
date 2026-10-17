@@ -192,6 +192,30 @@ export function Pipeline() {
 
   const handleDragCancel = () => setActiveId(null);
 
+  // ── Accessibility: describe drag operations to screen readers (AC1.2.2) ──
+  const dealName = (id) => {
+    const p = projects.find(item => item.id === id);
+    return p ? (p.title || p.name) : 'deal';
+  };
+  const stageLabel = (id) => STAGES.find(s => s.id === id)?.label || id;
+
+  const dndAnnouncements = {
+    onDragStart({ active }) {
+      return `Picked up ${dealName(active.id)}. Use the arrow keys to choose a column, then press space or enter to drop.`;
+    },
+    onDragOver({ active, over }) {
+      if (!over) return `${dealName(active.id)} is no longer over a column.`;
+      return `${dealName(active.id)} is over ${stageLabel(over.id)}.`;
+    },
+    onDragEnd({ active, over }) {
+      if (!over) return `${dealName(active.id)} was dropped and returned to its column.`;
+      return `${dealName(active.id)} moved to ${stageLabel(over.id)}.`;
+    },
+    onDragCancel({ active }) {
+      return `Moving ${dealName(active.id)} was cancelled.`;
+    },
+  };
+
   const goToProject = (id) => navigate(`/projects/${id}`);
 
   return (
@@ -259,6 +283,13 @@ export function Pipeline() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
+            accessibility={{
+              announcements: dndAnnouncements,
+              screenReaderInstructions: {
+                draggable:
+                  'To move a deal between pipeline stages, press space or enter to pick it up, use the arrow keys to choose a column, then press space or enter to drop it. Press escape to cancel.',
+              },
+            }}
           >
             <div className="kanban-board">
               {STAGES.map(stage => (

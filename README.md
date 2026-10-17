@@ -49,6 +49,30 @@ ready)*, or *Not configured — local mode*, with next-step hints.
 When `DATABASE_URL` is configured, run `npx prisma db push` to create tables
 before verifying.
 
+## Data model: deals vs. projects
+
+Vertex models the pre-sales pipeline on the same `Project` record that holds
+operational projects, using a **`stage`** field separate from the operational
+**`status`** field:
+
+| Field | Values | Meaning |
+|---|---|---|
+| `stage` | `Lead` · `Proposal Sent` · `Negotiation` · `Active` · `Completed` | Board column; drives the Kanban. |
+| `status` | `In Progress` · `On Hold` · `Overdue` · `Completed` · `Archived` | Operational health; drives detail views. |
+
+**Decision (Beta Mark - ii).** The Prisma `Deal` model is **reserved for a
+future migration** and is *not* used by the UI. The transition path is:
+a record is created at a pre-sales `stage` (default `Lead`) and is "converted"
+by moving it to the `Active` stage. `stageForStatus()` in
+`src/utils/storage.js` keeps the two fields coherent when a user edits
+`status` directly (e.g. `Completed` → stage `Completed`). Stage-less legacy
+records are back-filled on read by `normalizeProject()`. This is documented
+here instead of reconciled into a separate `Deal` entity so the stability
+release ships no data-model migration.
+
+> **Open (stakeholder):** whether to split `Deal` out as its own entity in
+> Phase 3+. Tracked as R8 in the Phase 2 PRD.
+
 ## Roadmap & scope
 
 This line of the product is a **stability release (Beta Mark - ii)**. Per the
