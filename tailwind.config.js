@@ -8,6 +8,16 @@ export default {
         body:    ['var(--font-body)',    'system-ui', 'sans-serif'],
         mono:    ['var(--font-mono)',    'Courier New', 'monospace'],
       },
+      fontSize: {
+        h1:       ['32px', { lineHeight: '1.2' }],
+        h2:       ['24px', { lineHeight: '1.3' }],
+        h3:       ['20px', { lineHeight: '1.3' }],
+        h4:       ['18px', { lineHeight: '1.4' }],
+        'body-lg': ['16px', { lineHeight: '1.6' }],
+        'body-md': ['14px', { lineHeight: '1.5' }],
+        'body-sm': ['13px', { lineHeight: '1.5' }],
+        caption:   ['12px', { lineHeight: '1.4' }],
+      },
       colors: {
         canvas: 'var(--color-canvas)',
         surface: {

@@ -1,7 +1,23 @@
-# Vertex — Tesseract Vertex
+# Tesseract VERTEX
 
-A local-first CRM & Focus OS for solo freelancers. Track clients, projects, a
-pre-sales pipeline, tasks, and invoices in one workspace.
+> **Core Principle:** Open source. Forever free. Your business, your way.
+
+Building business software should not require freelancers to commit to another recurring subscription.
+
+**Tesseract VERTEX** is an open-source CRM designed for freelancers and small teams to manage clients, sales pipelines, projects, tasks, invoices, and business reporting from one unified workspace.
+
+The product follows a **dual-access model**: users can sign up for the cloud-hosted offering or self-host their own instance for greater control and extensive customization.
+
+### Product Vision
+Make professional business management accessible to independent professionals through software that is free, open source, and adaptable to their needs.
+
+### Key Capabilities
+1. **Client & Relationship Management** — Centralized client profiles, history, and contact tracking.
+2. **Visual Project & Sales Pipeline Management** — Interactive Kanban boards spanning pre-sales deals to active project stages.
+3. **Task & Project Tracking** — Project milestones, operational task workflows, and deadline tracking.
+4. **Invoice Generation** — Professional invoicing and billing status management.
+5. **Business Analytics & Reporting** — Revenue, pipeline conversion, and operational business metrics.
+6. **Cloud Access & Self-Hosted Deployment** — Choose between managed cloud convenience or full autonomy via self-hosting.
 
 ## Stack
 
