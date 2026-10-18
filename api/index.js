@@ -1,12 +1,14 @@
 import 'dotenv/config';
+import crypto from 'node:crypto';
 import express from 'express';
 import { verifyToken } from './middleware/auth.js';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 import { getPrisma } from './prisma.js';
-import { getJwtSecret, getMasterPassword } from './env.js';
+import { envValue, getJwtSecret, getMasterPassword } from './env.js';
 
 const app = express();
+app.disable('x-powered-by');
 app.use(express.json());
 
 function getSupabaseClient() {
@@ -83,18 +85,46 @@ async function verifyDatabaseConnection() {
   };
 }
 
-// Add CORS headers for Vercel / Mobile App future-proofing
+// Baseline security headers for all API responses.
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'DENY');
+  res.header('Referrer-Policy', 'no-referrer');
+  next();
+});
+
+// CORS: same-origin by default — no headers are needed. Set CORS_ORIGINS
+// (comma-separated allowlist) only when the API is called from another origin.
+const allowedOrigins = envValue('CORS_ORIGINS')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const isAllowed = origin && allowedOrigins.includes(origin);
+
+  if (isAllowed) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Vary', 'Origin');
+  }
+
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.sendStatus(isAllowed || !origin ? 200 : 403);
   }
   next();
 });
 
 const api = express.Router();
+
+/** Constant-time string comparison — avoids leaking the master key via timing. */
+function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
+}
 
 // ==========================================
 // AUTHENTICATION
@@ -102,14 +132,24 @@ const api = express.Router();
 
 api.post('/auth/login', (req, res) => {
   try {
-    const password = String(req.body?.password ?? '').trim();
     const masterPassword = getMasterPassword();
+    const jwtSecret = getJwtSecret();
 
-    if (!password || password !== masterPassword) {
+    // Fail closed: in production, missing or placeholder secrets disable login
+    // entirely instead of falling back to shipped defaults.
+    if (!masterPassword || !jwtSecret) {
+      console.error('[vertex] Auth is not configured. Set MASTER_PASSWORD and JWT_SECRET in the deployment environment.');
+      return res.status(503).json({
+        error: { code: 'SERVER_MISCONFIGURED', message: 'Server authentication is not configured. Contact the administrator.' },
+      });
+    }
+
+    const password = String(req.body?.password ?? '').trim();
+    if (!password || !safeEqual(password, masterPassword)) {
       return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid Master Key' } });
     }
 
-    const token = jwt.sign({ role: 'admin' }, getJwtSecret(), { expiresIn: '30d' });
+    const token = jwt.sign({ role: 'admin' }, jwtSecret, { expiresIn: '30d' });
     res.json({ data: { token } });
   } catch (err) {
     res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: err.message } });

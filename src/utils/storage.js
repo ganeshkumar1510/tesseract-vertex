@@ -43,9 +43,10 @@ export function setStorageMode(mode) {
  * In a local-first app, this checks the stored user hash/string.
  */
 export function validateUserCredentials(username, password) {
-  // Universal bypass for testing/admin overrides
-  const adminPin = import.meta.env.VITE_ADMIN_PIN || '1510';
-  if (password === adminPin) return 'system_admin';
+  // Dev-only master override. VITE_* values ship inside the client bundle,
+  // so this must never act as a bypass in production builds.
+  const adminPin = import.meta.env.VITE_ADMIN_PIN;
+  if (import.meta.env.DEV && adminPin && password === adminPin) return 'system_admin';
 
   const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
   const user = users[username];
@@ -141,26 +142,6 @@ function mergeById(...lists) {
     }
   }
   return Array.from(map.values());
-}
-
-// ── API Helpers ─────────────────────────────────────────────────────────────
-
-const API_BASE = '/api';
-
-async function apiFetch(endpoint, options = {}) {
-  const token = localStorage.getItem('vtx_jwt');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-    ...options.headers
-  };
-
-  const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'API request failed');
-  }
-  return response.json();
 }
 
 // ── User Management ──────────────────────────────────────────────────────────
@@ -286,12 +267,16 @@ export function clearTestContext() {
 
 // ── Data Sovereignty (Module 1) ─────────────────────────────────────────────
 
+/** Every key the app owns lives under these prefixes. */
+const DATA_PREFIXES = ['vtx_', 'live_', 'test_', 'demo_live_'];
+/** Wipe additionally clears legacy/global app keys (theme, persisted store). */
+const WIPE_PREFIXES = [...DATA_PREFIXES, 'vertex-'];
+
 export function exportStorageJSON() {
   const data = {};
-  const prefixes = ['vtx_', 'live_', 'test_', 'demo_live_'];
   
   Object.keys(localStorage).forEach(key => {
-    if (prefixes.some(p => key.startsWith(p))) {
+    if (DATA_PREFIXES.some(p => key.startsWith(p))) {
       data[key] = localStorage.getItem(key);
     }
   });
@@ -308,10 +293,9 @@ export function exportStorageJSON() {
 export function importStorageJSON(jsonData) {
   try {
     const data = JSON.parse(jsonData);
-    const prefixes = ['vtx_', 'live_', 'test_', 'demo_live_'];
     
     Object.keys(data).forEach(key => {
-      if (prefixes.some(p => key.startsWith(p))) {
+      if (DATA_PREFIXES.some(p => key.startsWith(p))) {
         localStorage.setItem(key, data[key]);
       }
     });
@@ -323,15 +307,17 @@ export function importStorageJSON(jsonData) {
   }
 }
 
-export async function wipeStorage() {
-  try {
-    await apiFetch('/user', { method: 'DELETE' });
-  } catch (err) {
-    console.error('Failed to purge remote data:', err);
+/**
+ * Purges all Vertex-owned keys from this browser (local + session storage).
+ * Scoped to the app's namespace prefixes so unrelated browser data is
+ * never touched.
+ */
+export function wipeStorage() {
+  for (const storage of [localStorage, sessionStorage]) {
+    Object.keys(storage)
+      .filter((key) => WIPE_PREFIXES.some((prefix) => key.startsWith(prefix)))
+      .forEach((key) => storage.removeItem(key));
   }
-  localStorage.clear();
-  sessionStorage.clear();
-  console.log('VERTEX Instance Purged.');
 }
 
 export function logout() {
