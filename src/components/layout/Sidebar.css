@@ -1,4 +1,6 @@
-/* ── Tesseract Sidebar — Obsidian Dark ── */
+/* ── Tesseract Sidebar — collapsible rail with display modes ──
+   Modes: 'hover' (expand on hover) | 'expanded' | 'collapsed'.
+   Widths: 240px expanded / 64px collapsed. */
 
 .sidebar {
   width: 240px;
@@ -10,30 +12,27 @@
   position: relative;
   z-index: 10;
   flex-shrink: 0;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar--collapsed {
+  width: 64px;
 }
 
 /* ── Header / Logo ── */
 
 .sidebar-header {
-  padding: var(--space-xl) var(--space-lg);
+  height: 64px;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  padding: 0 var(--space-lg);
   border-bottom: 1px solid var(--border-color);
-}
-
-.sidebar-logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
   flex-shrink: 0;
 }
 
-.logo-text {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
+.sidebar--collapsed .sidebar-header {
+  justify-content: center;
+  padding: 0;
 }
 
 /* ── Navigation ── */
@@ -45,50 +44,139 @@
   flex-direction: column;
   gap: 2px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.nav-link {
+.sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   padding: 9px var(--space-md);
-  color: var(--text-secondary);
   border-radius: var(--radius-md);
-  transition: background 0.15s ease, color 0.15s ease;
-  font-weight: 500;
-  font-size: 14px;
   text-decoration: none;
+  min-width: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.nav-link:hover {
-  background-color: var(--neutral-light);
-  color: var(--text-primary);
-}
-
-.nav-link.active {
-  background-color: var(--accent-light);
-  color: var(--accent-primary);
-  box-shadow: inset 2px 0 0 var(--accent-primary);
-}
-
-.nav-link.active .nav-icon {
-  color: var(--accent-primary);
-}
-
-.nav-icon {
+.sidebar-nav-icon {
   flex-shrink: 0;
-  opacity: 0.7;
-  transition: opacity 0.15s;
 }
 
-.nav-link:hover .nav-icon,
-.nav-link.active .nav-icon {
-  opacity: 1;
+.sidebar-label {
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.16s ease;
+}
+
+.sidebar--collapsed .sidebar-nav-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar--collapsed .sidebar-label {
+  max-width: 0;
+  opacity: 0;
 }
 
 /* ── Footer ── */
 
 .sidebar-footer {
-  padding: var(--space-sm) var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) var(--space-sm) var(--space-md);
   border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Sidebar control ── */
+
+.sidebar-control-wrap {
+  position: relative;
+}
+
+.sidebar-control-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.sidebar-control-btn:hover {
+  background-color: var(--bg-overlay);
+  color: var(--text-primary);
+}
+
+.sidebar-mode-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: 208px;
+  padding: 6px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color-bright);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: sidebarMenuIn 0.15s ease-out;
+}
+
+.sidebar-mode-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-mode-item:hover {
+  background-color: var(--bg-overlay);
+  color: var(--text-primary);
+}
+
+.sidebar-mode-item.is-selected {
+  color: var(--accent-primary);
+}
+
+.sidebar-mode-icon {
+  flex-shrink: 0;
+}
+
+.sidebar-mode-check {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@keyframes sidebarMenuIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-label {
+    transition: none;
+  }
+
+  .sidebar-mode-menu {
+    animation: none;
+  }
 }
