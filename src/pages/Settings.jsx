@@ -5,7 +5,6 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { User, Bell, Lock, Palette, Link as LinkIcon, Save, Database, Download, Upload, Trash2 } from 'lucide-react';
 import { exportStorageJSON, importStorageJSON, wipeStorage, getLocalUser, getContext, validateUserCredentials, saveUser } from '../utils/storage';
-import { ThemeSlider } from '../components/ui/ThemeSlider';
 import { useToast } from '../hooks/useToast';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Settings.css';
@@ -207,10 +206,6 @@ export function Settings() {
                   <div className="form-group">
                     <label>Workspace Name</label>
                     <Input value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label>Theme</label>
-                    <ThemeSlider />
                   </div>
                   <div className="form-actions">
                     <Button type="submit" variant="primary"><Save size={16} /> Save Changes</Button>
