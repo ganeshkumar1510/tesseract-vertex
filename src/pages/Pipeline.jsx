@@ -62,7 +62,7 @@ function DealCard({ project, stage, currency, onNavigate, overlay }) {
       onKeyDown={handleKeyDown}
     >
     <Card
-      className={`kanban-card border-left-${stage.color} ${overlay ? 'drag-overlay-card' : ''}`}
+      className={`kanban-card ${overlay ? 'drag-overlay-card' : ''}`}
       onClick={overlay ? undefined : () => onNavigate(project.id)}
     >
       <div className="card-header-row">
@@ -86,9 +86,12 @@ function KanbanColumn({ stage, projects, currency, onNavigate }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
   return (
-    <div className={`kanban-column ${isOver ? 'drag-over' : ''}`}>
-      <div className={`column-header border-${stage.color}`}>
-        <h3 className="column-title">{stage.label}</h3>
+    <div className={`kanban-column stage-${stage.color} ${isOver ? 'drag-over' : ''}`}>
+      <div className="column-header">
+        <h3 className="column-title">
+          <span className={`stage-dot dot-${stage.color}`} aria-hidden="true" />
+          {stage.label}
+        </h3>
         <div className="column-meta">
           <span>{projects.length} projects</span>
           <span>•</span>

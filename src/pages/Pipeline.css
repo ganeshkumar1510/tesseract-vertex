@@ -85,32 +85,39 @@
   flex-direction: column;
   height: 100%;
   background-color: var(--color-surface-sunken);
-  border: 1px solid var(--border-color-subtle);
   border-radius: var(--radius-lg);
-  overflow: hidden; /* Clip header accent to the column radius */
+  overflow: hidden; /* Clip the header tint to the column radius */
+  transition: background-color 0.15s ease;
   padding-bottom: var(--space-xl);
 }
 
 .column-header {
   padding: var(--space-md);
-  border-top: 3px solid;
-  border-bottom: 1px solid var(--border-color-subtle);
-  border-radius: 0; /* Square corners: the column's overflow clips the accent flush to its radius */
   margin-bottom: var(--space-md);
   background-color: var(--bg-surface);
 }
 
-/* Stage Colors */
-.border-purple { border-top-color: var(--stage-lead); }
-.border-amber { border-top-color: var(--stage-proposal); }
-.border-blue { border-top-color: var(--stage-negotiation); }
-.border-green { border-top-color: var(--stage-active); }
-.border-gray { border-top-color: var(--stage-completed); }
-.border-red { border-top-color: var(--stage-lost); }
+/* Stage colors — soft tinted header caps, no strokes */
+.kanban-column.stage-purple .column-header { background-color: color-mix(in srgb, var(--stage-lead) 9%, var(--color-surface)); }
+.kanban-column.stage-amber .column-header { background-color: color-mix(in srgb, var(--stage-proposal) 9%, var(--color-surface)); }
+.kanban-column.stage-blue .column-header { background-color: color-mix(in srgb, var(--stage-negotiation) 9%, var(--color-surface)); }
+.kanban-column.stage-green .column-header { background-color: color-mix(in srgb, var(--stage-active) 9%, var(--color-surface)); }
+.kanban-column.stage-gray .column-header { background-color: color-mix(in srgb, var(--stage-completed) 9%, var(--color-surface)); }
+.kanban-column.stage-red .column-header { background-color: color-mix(in srgb, var(--stage-lost) 9%, var(--color-surface)); }
 
 .column-title {
   font-size: 14px;
   margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.stage-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .column-meta {
@@ -133,26 +140,18 @@
 /* Card overrides */
 .kanban-card {
   padding: var(--space-md) !important;
-  border-left: 3px solid;
   cursor: grab;
   transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .kanban-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .kanban-card:active {
   cursor: grabbing;
 }
-
-/* Left borders based on stage */
-.border-left-purple { border-left-color: var(--stage-lead); }
-.border-left-amber { border-left-color: var(--stage-proposal); }
-.border-left-blue { border-left-color: var(--stage-negotiation); }
-.border-left-green { border-left-color: var(--stage-active); }
-.border-left-gray { border-left-color: var(--stage-completed); }
 
 .project-name {
   font-size: 14px;
@@ -230,12 +229,10 @@
 }
 
 .kanban-column.drag-over {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
+  background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-sunken));
 }
 
-.kanban-column.drag-over .empty-column,
-.kanban-column.drag-over .kanban-cards {
+.kanban-column.drag-over .empty-column {
   border-color: var(--accent-primary);
 }
 
@@ -245,7 +242,7 @@
 
 .drag-overlay-card {
   opacity: 0.85;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.10);
   cursor: grabbing;
 }
 
