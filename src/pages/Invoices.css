@@ -31,13 +31,3 @@
 .row-overdue:hover {
   background-color: #FEE2E2 !important;
 }
-
-.reminder-btn {
-  font-size: 12px;
-  padding: 4px 8px;
-  color: var(--danger);
-  border-color: var(--danger-light);
-}
-.reminder-btn:hover {
-  background-color: var(--danger-light);
-}

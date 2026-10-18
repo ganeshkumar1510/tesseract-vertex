@@ -299,7 +299,7 @@
 }
 
 .vibe-btn:hover {
-  background: var(--neutral-light);
+  background: var(--color-surface-elevated);
   transform: translateY(-2px);
 }
 

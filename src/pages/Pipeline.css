@@ -105,7 +105,6 @@
 .kanban-column.stage-blue .column-header { background-color: color-mix(in srgb, var(--stage-negotiation) 9%, var(--color-surface)); }
 .kanban-column.stage-green .column-header { background-color: color-mix(in srgb, var(--stage-active) 9%, var(--color-surface)); }
 .kanban-column.stage-gray .column-header { background-color: color-mix(in srgb, var(--stage-completed) 9%, var(--color-surface)); }
-.kanban-column.stage-red .column-header { background-color: color-mix(in srgb, var(--stage-lost) 9%, var(--color-surface)); }
 
 .column-title {
   font-size: 14px;
@@ -164,21 +163,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.stage-select-mini {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 10px;
-  padding: 1px 4px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  outline: none;
-}
-
-.stage-select-mini:hover {
-  border-color: var(--accent-primary);
 }
 
 .project-client {

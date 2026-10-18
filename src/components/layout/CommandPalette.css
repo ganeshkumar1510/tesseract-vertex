@@ -61,16 +61,6 @@
   border-bottom-color: var(--accent-primary);
 }
 
-.cmd-close {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
-}
-.cmd-close:hover { background-color: var(--neutral-light); }
-
 .cmd-results {
   max-height: 350px;
   overflow-y: auto;
@@ -106,7 +96,7 @@
 }
 
 .cmd-item:hover, .cmd-item:focus, .cmd-item.selected {
-  background-color: var(--neutral-light);
+  background-color: var(--color-surface-elevated);
   outline: none;
 }
 

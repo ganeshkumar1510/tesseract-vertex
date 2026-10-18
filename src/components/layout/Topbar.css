@@ -16,14 +16,14 @@
   cursor: pointer;
 }
 
-.global-search .input {
+.global-search {
   background-color: var(--bg-elevated);
   border-color: var(--border-color-bright);
   color: var(--text-primary);
   cursor: pointer;
 }
 
-.global-search .input:hover {
+.global-search:hover {
   border-color: var(--accent-subtle);
   background-color: var(--bg-overlay);
 }
@@ -32,18 +32,6 @@
   display: flex;
   align-items: center;
   gap: var(--space-lg);
-}
-
-.ai-btn {
-  background-color: var(--accent-light) !important;
-  color: var(--accent-primary) !important;
-  font-weight: 600 !important;
-  border: 1px solid var(--accent-subtle) !important;
-}
-
-.ai-btn:hover {
-  background-color: var(--accent-primary) !important;
-  color: white !important;
 }
 
 .notification-wrapper {

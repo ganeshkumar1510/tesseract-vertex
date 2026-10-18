@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
@@ -31,7 +31,6 @@ export function Topbar({ onOpenSearch }) {
       <div className="topbar-search" onClick={onOpenSearch}>
         <Input
           placeholder="Search everywhere... (Press ⌘K)"
-          icon={<Search size={16} />}
           className="global-search"
           readOnly
         />
