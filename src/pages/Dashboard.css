@@ -28,10 +28,6 @@
   gap: var(--space-md);
 }
 
-.pill {
-  border-radius: var(--radius-full);
-}
-
 /* Metrics Row */
 .metrics-grid {
   display: grid;
@@ -122,12 +118,16 @@
 
 .task-details {
   flex: 1;
+  min-width: 0;
 }
 
 .task-title {
   font-weight: 500;
   color: var(--text-primary);
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-client {

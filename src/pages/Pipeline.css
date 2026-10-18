@@ -146,6 +146,10 @@
   margin: 0 0 2px 0;
   color: var(--text-primary);
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stage-select-mini {
@@ -261,7 +265,8 @@
   border-color: var(--accent-primary);
 }
 
-.list-title { font-weight: 600; }
+.list-title { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-client { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list-stage, .list-client, .list-value { color: var(--text-secondary); font-size: 13px; }
 
 .pipeline-table-wrap {

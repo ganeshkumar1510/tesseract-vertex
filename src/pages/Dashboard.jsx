@@ -152,9 +152,9 @@ export function Dashboard() {
           </p>
         </div>
         <div className="quick-actions">
-          <Button variant="primary" className="pill" onClick={() => openModal('client')}><Plus size={16} /> New Client</Button>
-          <Button variant="secondary" className="pill" onClick={() => openModal('project')}><Plus size={16} /> New Project</Button>
-          <Button variant="secondary" className="pill" onClick={() => openModal('task')}><Plus size={16} /> Log Activity</Button>
+          <Button variant="primary" onClick={() => openModal('client')}><Plus size={16} /> New Client</Button>
+          <Button variant="secondary" onClick={() => openModal('project')}><Plus size={16} /> New Project</Button>
+          <Button variant="secondary" onClick={() => openModal('task')}><Plus size={16} /> Log Activity</Button>
         </div>
       </div>
 

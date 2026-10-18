@@ -259,7 +259,7 @@ export function Settings() {
                       <h4>Wipe Memory</h4>
                       <p>Permanently delete everything and start with a clean slate.</p>
                     </div>
-                    <Button variant="ghost" className="btn-danger" onClick={() => setIsWipeModalOpen(true)}>
+                    <Button variant="destructive" onClick={() => setIsWipeModalOpen(true)}>
                       <Trash2 size={16} /> Master Reset
                     </Button>
                   </div>
@@ -328,7 +328,7 @@ export function Settings() {
           </p>
           <Input name="wipePassword" type="password" placeholder="Master Sequence (Password)" autoFocus required />
           {wipeError && <p className="text-danger" style={{ fontSize: '14px', margin: 0 }}>{wipeError}</p>}
-          <Button type="submit" variant="ghost" className="btn-danger" style={{ marginTop: '8px' }} disabled={isWiping}>
+          <Button type="submit" variant="destructive" style={{ marginTop: '8px' }} disabled={isWiping}>
             {isWiping ? 'Purging…' : 'Confirm Purge'}
           </Button>
         </form>

@@ -26,6 +26,14 @@
   --color-link:             #a78bfa;
   --color-link-hover:       #c4b5fd;
 
+  /* Pipeline stage accents (Kanban headers and card edges) */
+  --stage-lead:        #8b5cf6;
+  --stage-proposal:    #fbbf24;
+  --stage-negotiation: #60a5fa;
+  --stage-active:      #2dd4bf;
+  --stage-completed:   #9791c0;
+  --stage-lost:        #e8547a;
+
   /* Violet Spectrum */
   --color-violet-singularity: #2e1065;
   --color-violet-wormhole:    #4c1d95;
@@ -57,6 +65,10 @@
   --color-warning-bg:      rgba(251, 191, 36, 0.08);
   --color-warning-border:  #8A6410;
   --color-warning-text:    #fbbf24;
+
+  /* Info — tasks and negotiation states */
+  --color-info-bg:         rgba(96, 165, 250, 0.10);
+  --color-info-text:       #60a5fa;
 
   /* Error — Flare */
   --color-error:           #E8547A;
@@ -105,6 +117,14 @@
   --color-link:             #000000;
   --color-link-hover:       #333333;
 
+  /* Pipeline stage accents (greyscale in Quasar) */
+  --stage-lead:        #000000;
+  --stage-proposal:    #666666;
+  --stage-negotiation: #4d4d4d;
+  --stage-active:      #333333;
+  --stage-completed:   #999999;
+  --stage-lost:        #6b6b6b;
+
   /* Violet spectrum — all set to greyscale equivalents */
   --color-violet-singularity: #1A1A1A;
   --color-violet-wormhole:    #333333;
@@ -136,6 +156,10 @@
   --color-warning-bg:      #F5F5F5;
   --color-warning-border:  #E5E5E5;
   --color-warning-text:    #6B6B6B;
+
+  /* Info — greyscale in Quasar */
+  --color-info-bg:         #F5F5F5;
+  --color-info-text:       #6B6B6B;
 
   /* Error — greyscale in Quasar */
   --color-error:           #000000;

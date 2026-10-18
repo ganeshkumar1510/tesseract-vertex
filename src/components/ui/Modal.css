@@ -11,6 +11,7 @@
   justify-content: center;
   z-index: 1000;
   padding: var(--space-xl);
+  animation: modalFade 0.15s ease-out;
 }
 
 .modal-content {
@@ -23,16 +24,28 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-lg);
-  animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-content:focus {
   outline: none;
 }
 
+@keyframes modalFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes modalEnter {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-content {
+    animation: none;
+  }
 }
 
 .modal-header {
