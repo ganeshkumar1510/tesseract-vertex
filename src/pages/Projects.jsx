@@ -5,9 +5,13 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Plus, Search, AlertCircle, ChevronRight } from 'lucide-react';
 import { getData, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { useToast } from '../hooks/useToast';
+import { useDiscardGuard } from '../hooks/useDiscardGuard';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Projects.css';
 import './Clients.css';
 
@@ -29,6 +33,10 @@ export function Projects() {
     status: 'In Progress',
     category: ''
   });
+  const [formError, setFormError] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+  const toast = useToast();
+  const { isSubmitting, guard } = useSubmitGuard();
 
   const loadData = useCallback(() => {
     const projectList = getData('projects') || [];
@@ -120,16 +128,33 @@ export function Projects() {
       status: 'In Progress',
       category: ''
     });
+    setFormError('');
+    setIsDirty(false);
     setIsModalOpen(true);
   };
 
-  const handleCreateProject = (e) => {
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsDirty(false);
+    setFormError('');
+  };
+
+  const { requestClose, discardModalProps } = useDiscardGuard({
+    isDirty,
+    onClose: closeModal,
+  });
+
+  const markDirty = () => {
+    if (!isDirty) setIsDirty(true);
+  };
+
+  const handleCreateProject = guard((e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
     const selectedClient = clients.find(c => c.id === formData.client_id);
     if (!selectedClient) {
-      alert('Please select a valid client.');
+      setFormError('Please select a valid client.');
       return;
     }
 
@@ -148,9 +173,10 @@ export function Projects() {
     const created = addDataItem('projects', newProjectPayload);
     logActivity('note', `Created project: ${created.name}`, selectedClient.company || selectedClient.name);
 
-    setIsModalOpen(false);
+    closeModal();
     loadData();
-  };
+    toast.success('Project created', created.name);
+  });
 
   const getStatusBadgeVariant = (project) => {
     if (project.status === 'Completed') return 'neutral';
@@ -327,7 +353,7 @@ export function Projects() {
       </Card>
 
       {/* Relational + New Project Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New Project">
+      <Modal isOpen={isModalOpen} onClose={requestClose} title="Create New Project">
         {clients.length === 0 ? (
           <div className="zero-clients-alert">
             <p><strong>No clients found!</strong> You must create a client before initializing a project.</p>
@@ -335,7 +361,7 @@ export function Projects() {
               variant="primary"
               size="sm"
               onClick={() => {
-                setIsModalOpen(false);
+                closeModal();
                 navigate('/clients');
               }}
             >
@@ -350,7 +376,10 @@ export function Projects() {
                 name="name"
                 placeholder="e.g. Brand Identity 2026"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  markDirty();
+                }}
                 autoFocus
                 required
               />
@@ -361,7 +390,11 @@ export function Projects() {
               <select
                 className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
                 value={formData.client_id}
-                onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, client_id: e.target.value });
+                  if (formError) setFormError('');
+                  markDirty();
+                }}
                 required
               >
                 {clients.map(c => (
@@ -380,7 +413,10 @@ export function Projects() {
                   type="number"
                   placeholder="e.g. 8500"
                   value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, value: e.target.value });
+                    markDirty();
+                  }}
                 />
               </div>
 
@@ -390,7 +426,10 @@ export function Projects() {
                   name="deadline"
                   type="date"
                   value={formData.deadline}
-                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, deadline: e.target.value });
+                    markDirty();
+                  }}
                 />
               </div>
             </div>
@@ -401,7 +440,10 @@ export function Projects() {
                 <select
                   className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, status: e.target.value });
+                    markDirty();
+                  }}
                 >
                   <option value="In Progress">In Progress</option>
                   <option value="On Hold">On Hold</option>
@@ -414,17 +456,26 @@ export function Projects() {
                   name="category"
                   placeholder="e.g. Web App, Branding"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, category: e.target.value });
+                    markDirty();
+                  }}
                 />
               </div>
             </div>
 
-            <Button type="submit" className="mt-4">
+            {formError && (
+              <p className="text-xs text-danger" style={{ margin: 0 }}>{formError}</p>
+            )}
+
+            <Button type="submit" className="mt-4" disabled={isSubmitting}>
               Initialize Project
             </Button>
           </form>
         )}
       </Modal>
+
+      <ConfirmModal {...discardModalProps} />
     </div>
   );
 }

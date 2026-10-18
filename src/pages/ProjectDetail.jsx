@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { getData, updateDataItem, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { useToast } from '../hooks/useToast';
 import { 
   ArrowLeft, FileText, CheckSquare, Mail, 
   ChevronDown, Send, Plus
@@ -45,21 +46,13 @@ export function ProjectDetail() {
   const [noteText, setNoteText] = useState('');
   const [notFound, setNotFound] = useState(false);
 
-  // Non-blocking toast state
-  const [notification, setNotification] = useState('');
+  const toast = useToast();
 
   // Task creation modal
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskPriority, setTaskPriority] = useState('Medium');
   const [taskDueDate, setTaskDueDate] = useState('');
-
-  const showNotification = (msg) => {
-    setNotification(msg);
-    setTimeout(() => {
-      setNotification('');
-    }, 3500);
-  };
 
   const loadProjectData = useCallback(() => {
     const allProjects = getData('projects') || [];
@@ -110,11 +103,13 @@ export function ProjectDetail() {
     return () => window.removeEventListener('vertex-data-change', handleDataChange);
   }, [loadProjectData]);
 
-  const handleUpdateProject = (updates) => {
+  const handleUpdateProject = (updates, { silent = false } = {}) => {
     const updated = updateDataItem('projects', id, updates);
     if (updated) {
       setProject(updated);
-      showNotification('Project details saved.');
+      if (!silent) {
+        toast.success('Project updated', 'Project details saved.');
+      }
     }
   };
 
@@ -134,12 +129,12 @@ export function ProjectDetail() {
     if (!noteText.trim()) return;
     handleAddActivity('Note', noteText.trim());
     setNoteText('');
-    showNotification('Note added to project timeline.');
+    toast.success('Note added', 'Added to the project timeline.');
   };
 
   const handleSendEmail = () => {
     handleAddActivity('Email', `Sent email to ${project.client || 'Client'}: "Project Status Update"`);
-    showNotification(`Status email notification queued for ${project.client || 'Client'}.`);
+    toast.success('Status email queued', `Notification queued for ${project.client || 'Client'}.`);
   };
 
   const handleCreateTask = (e) => {
@@ -165,7 +160,7 @@ export function ProjectDetail() {
     setIsTaskModalOpen(false);
     setTaskTitle('');
     setTaskDueDate('');
-    showNotification(`Task "${newTask.title}" added.`);
+    toast.success('Task added', `"${newTask.title}" added to the project.`);
   };
 
   const toggleTaskStatus = (taskId) => {
@@ -224,30 +219,6 @@ export function ProjectDetail() {
   return (
     <div className="detail-page">
       <div className="detail-left">
-        {/* Toast / Notification Banner */}
-        {notification && (
-          <div style={{
-            backgroundColor: 'var(--accent-primary)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            marginBottom: '16px',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-          }}>
-            <span>{notification}</span>
-            <button 
-              onClick={() => setNotification('')}
-              style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              ×
-            </button>
-          </div>
-        )}
-
         {/* Header */}
         <div className="detail-header">
           <Link to="/projects" className="back-link">
@@ -258,7 +229,7 @@ export function ProjectDetail() {
               <input 
                 className="header-title-input"
                 value={project.name || project.title || ''}
-                onChange={(e) => handleUpdateProject({ name: e.target.value, title: e.target.value })}
+                onChange={(e) => handleUpdateProject({ name: e.target.value, title: e.target.value }, { silent: true })}
                 onBlur={() => setIsEditing(false)}
                 autoFocus
               />
@@ -355,14 +326,14 @@ export function ProjectDetail() {
                     <input 
                       type="number"
                       value={project.value || 0} 
-                      onChange={(e) => handleUpdateProject({ value: Number(e.target.value) })}
+                      onChange={(e) => handleUpdateProject({ value: Number(e.target.value) }, { silent: true })}
                     />
                   </div>
                   <div className="detail-field">
                     <label>Category</label>
                     <input 
                       value={project.category || 'General'} 
-                      onChange={(e) => handleUpdateProject({ category: e.target.value })}
+                      onChange={(e) => handleUpdateProject({ category: e.target.value }, { silent: true })}
                       placeholder="e.g. Product Design"
                     />
                   </div>
@@ -372,7 +343,7 @@ export function ProjectDetail() {
                   <textarea 
                     placeholder="Describe the project goals, scope, and deliverables..."
                     value={project.description || ''}
-                    onChange={(e) => handleUpdateProject({ description: e.target.value })}
+                    onChange={(e) => handleUpdateProject({ description: e.target.value }, { silent: true })}
                     rows={4}
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit' }}
                   />

@@ -5,6 +5,7 @@ import { Topbar } from './Topbar';
 import { CommandPalette } from './CommandPalette';
 import { UATControls } from './UATControls';
 import { MobileNav } from './MobileNav';
+import { ToastContainer } from '../ui/ToastContainer';
 import { getContext, setContext, getStorageMode } from '../../utils/storage';
 import { useAppStore } from '../../store/useAppStore';
 import './AppLayout.css';
@@ -84,6 +85,7 @@ export function AppLayout() {
 
       {mode === 'test' && <UATControls />}
       <CommandPalette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <ToastContainer />
     </div>
   );
 }

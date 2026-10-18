@@ -7,7 +7,11 @@ import { generateInvoicePDF } from '../utils/pdfGenerator';
 import { getLocalUser, getData, addDataItem, updateDataItem, getContext, logActivity } from '../utils/storage';
 import { formatMoney } from '../utils/format';
 import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Input } from '../components/ui/Input';
+import { useToast } from '../hooks/useToast';
+import { useDiscardGuard } from '../hooks/useDiscardGuard';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Invoices.css';
 import './Clients.css';
 
@@ -30,6 +34,11 @@ export function Invoices() {
     const net15 = new Date(Date.now() + 15 * 86400000);
     return net15.toISOString().split('T')[0];
   });
+  const [formError, setFormError] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+  const [invoicePendingPayment, setInvoicePendingPayment] = useState(null);
+  const toast = useToast();
+  const { isSubmitting, guard } = useSubmitGuard();
 
   const loadAllData = useCallback(() => {
     const invList = getData('invoices') || [];
@@ -111,18 +120,35 @@ export function Invoices() {
     if (clients.length > 0) {
       setSelectedClientId(clients[0].id);
     }
+    setFormError('');
+    setIsDirty(false);
     setAmount('');
     setIssueDate(new Date().toISOString().split('T')[0]);
     setDueDate(new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]);
     setIsModalOpen(true);
   };
 
-  const handleCreate = (e) => {
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsDirty(false);
+    setFormError('');
+  };
+
+  const { requestClose, discardModalProps } = useDiscardGuard({
+    isDirty,
+    onClose: closeModal,
+  });
+
+  const markDirty = () => {
+    if (!isDirty) setIsDirty(true);
+  };
+
+  const handleCreate = guard((e) => {
     e.preventDefault();
 
     const clientObj = clients.find(c => c.id === selectedClientId);
     if (!clientObj) {
-      alert('Please select a valid client.');
+      setFormError('Please select a valid client.');
       return;
     }
 
@@ -159,8 +185,9 @@ export function Invoices() {
     logActivity('note', `Generated invoice: ${saved.id} for ${saved.client}`, clientObj.company || clientObj.name);
 
     setInvoices(prev => [saved, ...prev]);
-    setIsModalOpen(false);
-  };
+    closeModal();
+    toast.success('Invoice created', `${saved.id} · ${formatMoney(saved.amount, currency)}`);
+  });
 
   const handleDownload = (invoice) => {
     generateInvoicePDF(invoice, user);
@@ -175,6 +202,7 @@ export function Invoices() {
     if (updated) {
       setInvoices(prev => prev.map(inv => inv.id === invoiceId ? updated : inv));
       logActivity('note', `Invoice ${updated.id} marked as Paid`, updated.client);
+      toast.success('Invoice marked as paid', `${updated.id} · ${formatMoney(Number(updated.amount) || 0, currency)}`);
     }
   };
 
@@ -200,7 +228,7 @@ export function Invoices() {
         </Button>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Generate New Invoice">
+      <Modal isOpen={isModalOpen} onClose={requestClose} title="Generate New Invoice">
         {clients.length === 0 ? (
           <div className="flex flex-col gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-md text-amber-500">
             <p className="m-0 text-sm">
@@ -217,7 +245,11 @@ export function Invoices() {
               <select
                 className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
                 value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedClientId(e.target.value);
+                  if (formError) setFormError('');
+                  markDirty();
+                }}
                 required
               >
                 {clients.map(c => (
@@ -233,7 +265,10 @@ export function Invoices() {
               <select
                 className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
                 value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedProjectId(e.target.value);
+                  markDirty();
+                }}
               >
                 <option value="">General Retainer / Advisory (No Project)</option>
                 {availableProjects.map(p => (
@@ -256,7 +291,10 @@ export function Invoices() {
                 placeholder="e.g. 5000"
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  markDirty();
+                }}
                 required
               />
             </div>
@@ -268,7 +306,10 @@ export function Invoices() {
                   name="issueDate"
                   type="date"
                   value={issueDate}
-                  onChange={(e) => setIssueDate(e.target.value)}
+                  onChange={(e) => {
+                    setIssueDate(e.target.value);
+                    markDirty();
+                  }}
                   required
                 />
               </div>
@@ -279,18 +320,43 @@ export function Invoices() {
                   name="dueDate"
                   type="date"
                   value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
+                  onChange={(e) => {
+                    setDueDate(e.target.value);
+                    markDirty();
+                  }}
                   required
                 />
               </div>
             </div>
 
-            <Button type="submit" className="mt-2">
+            {formError && (
+              <p className="text-xs text-danger" style={{ margin: 0 }}>{formError}</p>
+            )}
+
+            <Button type="submit" className="mt-2" disabled={isSubmitting}>
               Publish Invoice
             </Button>
           </form>
         )}
       </Modal>
+
+      <ConfirmModal {...discardModalProps} />
+
+      <ConfirmModal
+        isOpen={invoicePendingPayment !== null}
+        title="Mark invoice as paid?"
+        message={
+          invoicePendingPayment
+            ? `This records ${invoicePendingPayment.id} (${invoicePendingPayment.client}) as paid and stamps the payment date. This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Mark as paid"
+        onConfirm={() => {
+          if (invoicePendingPayment) handleMarkAsPaid(invoicePendingPayment.id);
+          setInvoicePendingPayment(null);
+        }}
+        onCancel={() => setInvoicePendingPayment(null)}
+      />
 
       <Card className="p-none table-responsive">
         <table className="clients-table">
@@ -329,7 +395,7 @@ export function Invoices() {
                         <Button 
                           variant="secondary" 
                           size="sm" 
-                          onClick={() => handleMarkAsPaid(inv.id)}
+                          onClick={() => setInvoicePendingPayment(inv)}
                           title="Mark as Paid"
                         >
                           Mark Paid

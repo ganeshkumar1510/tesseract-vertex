@@ -6,6 +6,8 @@ import { Modal } from '../components/ui/Modal';
 import { User, Bell, Lock, Palette, Link as LinkIcon, Save, Database, Download, Upload, Trash2 } from 'lucide-react';
 import { exportStorageJSON, importStorageJSON, wipeStorage, getLocalUser, getContext, validateUserCredentials, saveUser } from '../utils/storage';
 import { ThemeSlider } from '../components/ui/ThemeSlider';
+import { useToast } from '../hooks/useToast';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Settings.css';
 
 const TABS = [
@@ -29,13 +31,12 @@ export function Settings() {
     currency: user.currency || 'USD',
   });
   const [workspaceName, setWorkspaceName] = useState(user.workspace || 'VERTEX Studio');
-  const [profileToast, setProfileToast] = useState('');
-  const [importStatus, setImportStatus] = useState('idle');
   const [isWipeModalOpen, setIsWipeModalOpen] = useState(false);
   const [wipeError, setWipeError] = useState('');
   const [securityForm, setSecurityForm] = useState({ current: '', next: '', confirm: '' });
-  const [securityMsg, setSecurityMsg] = useState('');
   const [securityError, setSecurityError] = useState('');
+  const toast = useToast();
+  const { isSubmitting: isWiping, guard: guardWipe } = useSubmitGuard();
 
   useEffect(() => {
     const onDataChange = (e) => {
@@ -56,18 +57,6 @@ export function Settings() {
     return () => window.removeEventListener('vertex-data-change', onDataChange);
   }, [username]);
 
-  useEffect(() => {
-    if (!profileToast) return undefined;
-    const t = setTimeout(() => setProfileToast(''), 3000);
-    return () => clearTimeout(t);
-  }, [profileToast]);
-
-  useEffect(() => {
-    if (importStatus === 'idle') return undefined;
-    const t = setTimeout(() => setImportStatus('idle'), 5000);
-    return () => clearTimeout(t);
-  }, [importStatus]);
-
   const handleExport = () => exportStorageJSON();
 
   const handleImport = (e) => {
@@ -78,12 +67,16 @@ export function Settings() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const success = importStorageJSON(event.target.result);
-      setImportStatus(success ? 'success' : 'error');
+      if (success) {
+        toast.success('Workspace restored', 'Snapshot imported successfully.');
+      } else {
+        toast.error('Import failed', 'Ensure the file is a valid Vertex snapshot.');
+      }
     };
     reader.readAsText(file);
   };
 
-  const handleWipeSubmit = async (e) => {
+  const handleWipeSubmit = guardWipe(async (e) => {
     e.preventDefault();
     const pass = e.target.wipePassword.value;
     if (!pass) {
@@ -95,11 +88,11 @@ export function Settings() {
 
     if (isValid) {
       await wipeStorage();
-      window.location.href = '/';
+      window.location.replace('/');
     } else {
       setWipeError('Master Sequence (Password) validation failed. Workspace remains locked.');
     }
-  };
+  });
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -110,18 +103,17 @@ export function Settings() {
       profession: profileForm.profession,
       currency: profileForm.currency,
     });
-    setProfileToast('Profile updated');
+    toast.success('Profile updated');
   };
 
   const handleSaveBranding = (e) => {
     e.preventDefault();
     saveUser(username, { workspace: workspaceName });
-    setProfileToast('Profile updated');
+    toast.success('Workspace updated');
   };
 
   const handleChangePassword = (e) => {
     e.preventDefault();
-    setSecurityMsg('');
     setSecurityError('');
     if (!securityForm.next || securityForm.next !== securityForm.confirm) {
       setSecurityError('New password and confirmation must match.');
@@ -133,7 +125,7 @@ export function Settings() {
     }
     saveUser(username, { password: securityForm.next });
     setSecurityForm({ current: '', next: '', confirm: '' });
-    setSecurityMsg('Workspace password updated. This does not change the API master key in .env.');
+    toast.success('Workspace password updated', 'This does not change the API master key in .env.');
   };
 
   return (
@@ -141,12 +133,6 @@ export function Settings() {
       <div className="page-header">
         <h1 className="page-title">Settings</h1>
       </div>
-
-      {profileToast && (
-        <div className="inline-toast success">
-          {profileToast}
-        </div>
-      )}
 
       <div className="settings-layout">
         <div className="settings-nav">
@@ -240,19 +226,6 @@ export function Settings() {
               <CardContent>
                 <p className="settings-card-desc">VERTEX is private-first. You own all your data. Use these tools to move or protect your information.</p>
 
-                {importStatus === 'success' && (
-                  <div className="inline-status success">
-                    <span>Workspace restored successfully ✓</span>
-                    <button type="button" className="status-close" onClick={() => setImportStatus('idle')}>×</button>
-                  </div>
-                )}
-                {importStatus === 'error' && (
-                  <div className="inline-status error">
-                    <span>Import failed. Ensure the file is a valid Vertex snapshot.</span>
-                    <button type="button" className="status-close" onClick={() => setImportStatus('idle')}>×</button>
-                  </div>
-                )}
-
                 <div className="sovereignty-grid">
                   <div className="sov-action">
                     <div className="sov-info">
@@ -338,7 +311,6 @@ export function Settings() {
                     <Input type="password" value={securityForm.confirm} onChange={(e) => setSecurityForm({ ...securityForm, confirm: e.target.value })} required />
                   </div>
                   {securityError && <p className="text-danger">{securityError}</p>}
-                  {securityMsg && <p className="text-success">{securityMsg}</p>}
                   <div className="form-actions">
                     <Button type="submit" variant="primary"><Lock size={16} /> Update Password</Button>
                   </div>
@@ -356,8 +328,8 @@ export function Settings() {
           </p>
           <Input name="wipePassword" type="password" placeholder="Master Sequence (Password)" autoFocus required />
           {wipeError && <p className="text-danger" style={{ fontSize: '14px', margin: 0 }}>{wipeError}</p>}
-          <Button type="submit" variant="ghost" className="btn-danger" style={{ marginTop: '8px' }}>
-            Confirm Purge
+          <Button type="submit" variant="ghost" className="btn-danger" style={{ marginTop: '8px' }} disabled={isWiping}>
+            {isWiping ? 'Purging…' : 'Confirm Purge'}
           </Button>
         </form>
       </Modal>

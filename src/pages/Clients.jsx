@@ -6,7 +6,11 @@ import { Input } from '../components/ui/Input';
 import { Avatar } from '../components/ui/Avatar';
 import { Search, Filter, Plus, MoreHorizontal } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { getData, addDataItem, logActivity } from '../utils/storage';
+import { useToast } from '../hooks/useToast';
+import { useDiscardGuard } from '../hooks/useDiscardGuard';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Clients.css';
 
 export function Clients() {
@@ -14,6 +18,9 @@ export function Clients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({ name: '', email: '', company: '' });
+  const [isDirty, setIsDirty] = useState(false);
+  const toast = useToast();
+  const { isSubmitting, guard } = useSubmitGuard();
 
   const loadClients = useCallback(() => {
     const list = getData('clients') || [];
@@ -29,19 +36,34 @@ export function Clients() {
     return () => window.removeEventListener('vertex-data-change', onDataChange);
   }, [loadClients]);
 
-  const handleCreateClient = (e) => {
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsDirty(false);
+    setFormData({ name: '', email: '', company: '' });
+  };
+
+  const { requestClose, discardModalProps } = useDiscardGuard({
+    isDirty,
+    onClose: closeModal,
+  });
+
+  const markDirty = () => {
+    if (!isDirty) setIsDirty(true);
+  };
+
+  const handleCreateClient = guard((e) => {
     e.preventDefault();
-    addDataItem('clients', {
+    const saved = addDataItem('clients', {
       name: formData.name,
       email: formData.email || null,
       company: formData.company || null,
       status: 'Active',
     });
-    logActivity('note', `Added new client: ${formData.name}`, formData.company || formData.name);
-    setFormData({ name: '', email: '', company: '' });
-    setIsModalOpen(false);
+    logActivity('note', `Added new client: ${saved.name}`, formData.company || saved.name);
+    closeModal();
     loadClients();
-  };
+    toast.success('Client created', saved.name);
+  });
 
   const filteredClients = clients.filter(
     (client) =>
@@ -129,13 +151,16 @@ export function Clients() {
         </div>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Client">
+      <Modal isOpen={isModalOpen} onClose={requestClose} title="Add New Client">
         <form onSubmit={handleCreateClient} className="flex flex-col gap-4">
           <Input
             name="name"
             placeholder="Client Name *"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, name: e.target.value });
+              markDirty();
+            }}
             autoFocus
             required
           />
@@ -143,20 +168,28 @@ export function Clients() {
             name="company"
             placeholder="Company Name (Optional)"
             value={formData.company}
-            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, company: e.target.value });
+              markDirty();
+            }}
           />
           <Input
             name="email"
             type="email"
             placeholder="Email Address (Optional)"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, email: e.target.value });
+              markDirty();
+            }}
           />
-          <Button type="submit" className="mt-4">
+          <Button type="submit" className="mt-4" disabled={isSubmitting}>
             Create Client
           </Button>
         </form>
       </Modal>
+
+      <ConfirmModal {...discardModalProps} />
     </div>
   );
 }

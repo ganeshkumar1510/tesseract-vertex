@@ -2,8 +2,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { CheckSquare, Plus, MoreHorizontal, List, AlertCircle } from 'lucide-react';
 import { getData, addDataItem, updateDataItem, saveData, logActivity, isDemoMode } from '../utils/storage';
+import { useToast } from '../hooks/useToast';
+import { useDiscardGuard } from '../hooks/useDiscardGuard';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import { todayISO } from '../utils/format';
 import { bucketTasks } from '../utils/tasks';
 import { mockData } from '../utils/mockData';
@@ -46,6 +50,9 @@ export function Tasks() {
   const [menuTaskId, setMenuTaskId] = useState(null);
   const [taskForm, setTaskForm] = useState(emptyTaskForm);
   const [titleError, setTitleError] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+  const toast = useToast();
+  const { isSubmitting, guard } = useSubmitGuard();
 
   const loadTasks = useCallback(() => {
     setPersistentTasks(getData('tasks') || []);
@@ -147,6 +154,7 @@ export function Tasks() {
     setEditingTask(null);
     setTaskForm(emptyTaskForm);
     setTitleError('');
+    setIsDirty(false);
     setIsCreateModalOpen(true);
   };
 
@@ -162,6 +170,7 @@ export function Tasks() {
       notes: task.notes || '',
     });
     setTitleError('');
+    setIsDirty(false);
     setIsCreateModalOpen(true);
   };
 
@@ -170,9 +179,19 @@ export function Tasks() {
     setEditingTask(null);
     setTaskForm(emptyTaskForm);
     setTitleError('');
+    setIsDirty(false);
   };
 
-  const handleSaveTask = (e) => {
+  const { requestClose, discardModalProps } = useDiscardGuard({
+    isDirty,
+    onClose: closeTaskModal,
+  });
+
+  const markDirty = () => {
+    if (!isDirty) setIsDirty(true);
+  };
+
+  const handleSaveTask = guard((e) => {
     e.preventDefault();
     if (!taskForm.title.trim()) {
       setTitleError('Task title is required');
@@ -183,19 +202,23 @@ export function Tasks() {
 
     if (editingTask) {
       updateDataItem('tasks', editingTask.id, payload);
+      toast.success('Task updated', payload.title);
     } else {
       addDataItem('tasks', payload);
       logActivity('note', `Scheduled task: ${payload.title}`);
+      toast.success('Task created', payload.title);
     }
     closeTaskModal();
-  };
+  });
 
   const confirmDelete = (id) => {
+    const task = persistentTasks.find(t => t.id === id);
     const remaining = persistentTasks.filter(t => t.id !== id);
     saveData('tasks', remaining);
     setPersistentTasks(remaining);
     setDeletingTaskId(null);
     setMenuTaskId(null);
+    toast.success('Task deleted', task ? task.title : undefined);
   };
 
   const formatDueLabel = (task) => {
@@ -415,7 +438,7 @@ export function Tasks() {
 
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={closeTaskModal}
+        onClose={requestClose}
         title={editingTask ? 'Edit Task' : 'Add Task'}
       >
         <form onSubmit={handleSaveTask} className="task-form">
@@ -427,6 +450,7 @@ export function Tasks() {
               onChange={(e) => {
                 setTaskForm({ ...taskForm, title: e.target.value });
                 if (titleError) setTitleError('');
+                markDirty();
               }}
               autoFocus
             />
@@ -438,7 +462,10 @@ export function Tasks() {
               id="task-priority"
               className="form-select"
               value={taskForm.priority}
-              onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
+              onChange={(e) => {
+                setTaskForm({ ...taskForm, priority: e.target.value });
+                markDirty();
+              }}
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -451,7 +478,10 @@ export function Tasks() {
               id="task-due"
               type="date"
               value={taskForm.due}
-              onChange={(e) => setTaskForm({ ...taskForm, due: e.target.value })}
+              onChange={(e) => {
+                setTaskForm({ ...taskForm, due: e.target.value });
+                markDirty();
+              }}
             />
           </div>
           <div className="form-group">
@@ -460,7 +490,10 @@ export function Tasks() {
               id="task-project"
               className="form-select"
               value={taskForm.project_id}
-              onChange={(e) => setTaskForm({ ...taskForm, project_id: e.target.value })}
+              onChange={(e) => {
+                setTaskForm({ ...taskForm, project_id: e.target.value });
+                markDirty();
+              }}
             >
               <option value="">None</option>
               {projects.map(p => (
@@ -475,12 +508,17 @@ export function Tasks() {
               className="form-textarea"
               rows="3"
               value={taskForm.notes}
-              onChange={(e) => setTaskForm({ ...taskForm, notes: e.target.value })}
+              onChange={(e) => {
+                setTaskForm({ ...taskForm, notes: e.target.value });
+                markDirty();
+              }}
             />
           </div>
-          <Button type="submit">{editingTask ? 'Save Changes' : 'Create Task'}</Button>
+          <Button type="submit" disabled={isSubmitting}>{editingTask ? 'Save Changes' : 'Create Task'}</Button>
         </form>
       </Modal>
+
+      <ConfirmModal {...discardModalProps} />
     </div>
   );
 }
