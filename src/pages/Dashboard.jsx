@@ -160,37 +160,42 @@ export function Dashboard() {
 
       {!hasClients && (
         <div className="empty-state-banner">
-          <Database size={24} />
-          <div>
-            <h3>Your workspace is clean</h3>
-            <p>Start by adding your first client to see real-time metrics and pipelines.</p>
+          <Database size={24} className="empty-icon" aria-hidden="true" />
+          <div className="empty-copy">
+            <h3>Your workspace is ready for its first client.</h3>
+            <p>Add a client to start tracking projects, invoices and your pipeline.</p>
           </div>
-          <Button variant="primary" size="sm">Add Client</Button>
+          <Button variant="primary" onClick={() => openModal('client')}>
+            <Plus size={16} /> Add Client
+          </Button>
         </div>
       )}
 
       {/* Metrics Row */}
-      <div className="metrics-grid">
-        <Card className="metric-card">
-          <p className="metric-label">Active Projects</p>
-          <h2 className="metric-value">{sourceData.metrics.activeProjects}</h2>
-          <span className="metric-trend positive">{isDemo ? 'On track' : 'Started'}</span>
-        </Card>
-        <Card className="metric-card">
-          <p className="metric-label">Revenue This Month</p>
-          <h2 className="metric-value">{formatMoney(sourceData.metrics.revenueThisMonth, currency)}</h2>
-          <span className="metric-trend positive">{isDemo ? `↑ ${sourceData.metrics.revenueGrowth}%` : 'Goal set'}</span>
-        </Card>
-        <Card className="metric-card">
-          <p className="metric-label">Pending Invoices</p>
-          <h2 className="metric-value">{formatMoney(sourceData.metrics.pendingAmount, currency)}</h2>
-          <span className="metric-trend neutral"> outstanding</span>
-        </Card>
-        <Card className="metric-card">
-          <p className="metric-label">Tasks Due Today</p>
-          <h2 className="metric-value">{sourceData.metrics.tasksDueToday}</h2>
-          <span className="metric-trend neutral">Stay focused</span>
-        </Card>
+      <div className="overview-section">
+        <p className="section-label">Overview</p>
+        <div className="metrics-grid">
+          <Card className="metric-card">
+            <p className="metric-label">Active Projects</p>
+            <h2 className="metric-value">{sourceData.metrics.activeProjects}</h2>
+            <span className="metric-trend positive">{isDemo ? 'On track' : 'Started'}</span>
+          </Card>
+          <Card className="metric-card">
+            <p className="metric-label">Revenue This Month</p>
+            <h2 className="metric-value">{formatMoney(sourceData.metrics.revenueThisMonth, currency)}</h2>
+            <span className="metric-trend positive">{isDemo ? `↑ ${sourceData.metrics.revenueGrowth}%` : 'Goal set'}</span>
+          </Card>
+          <Card className="metric-card">
+            <p className="metric-label">Pending Invoices</p>
+            <h2 className="metric-value">{formatMoney(sourceData.metrics.pendingAmount, currency)}</h2>
+            <span className="metric-trend neutral"> outstanding</span>
+          </Card>
+          <Card className="metric-card">
+            <p className="metric-label">Tasks Due Today</p>
+            <h2 className="metric-value">{sourceData.metrics.tasksDueToday}</h2>
+            <span className="metric-trend neutral">Stay focused</span>
+          </Card>
+        </div>
       </div>
 
       {/* Middle Section */}

@@ -18,7 +18,7 @@ export function Button({ variant = 'primary', size = 'md', className, ...props }
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center rounded-md font-display font-semibold transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none',
+        'inline-flex items-center justify-center gap-2 rounded-md font-display font-semibold whitespace-nowrap transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none',
         variants[variant],
         sizes[size],
         className
