@@ -90,7 +90,7 @@
 }
 
 body {
-  font-family: 'Instrument Sans', system-ui, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.5;
