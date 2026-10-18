@@ -8,6 +8,7 @@ import { getData, addDataItem, updateDataItem, saveData, logActivity, isDemoMode
 import { useToast } from '../hooks/useToast';
 import { useDiscardGuard } from '../hooks/useDiscardGuard';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
+import { useQueryParams } from '../hooks/useQueryParams';
 import { todayISO } from '../utils/format';
 import { bucketTasks } from '../utils/tasks';
 import { mockData } from '../utils/mockData';
@@ -43,7 +44,8 @@ export function Tasks() {
 
   const [persistentTasks, setPersistentTasks] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('All');
+  const { getParam, setParam } = useQueryParams();
+  const activeFilter = getParam('filter', 'All');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTaskId, setDeletingTaskId] = useState(null);
@@ -327,7 +329,7 @@ export function Tasks() {
                 key={tab}
                 type="button"
                 className={`filter-pill ${activeFilter === tab ? 'active' : ''}`}
-                onClick={() => setActiveFilter(tab)}
+                onClick={() => setParam('filter', tab === 'All' ? '' : tab)}
               >
                 {tab}
               </button>

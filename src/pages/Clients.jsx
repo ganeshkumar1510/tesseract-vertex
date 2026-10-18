@@ -11,13 +11,15 @@ import { getData, addDataItem, logActivity } from '../utils/storage';
 import { useToast } from '../hooks/useToast';
 import { useDiscardGuard } from '../hooks/useDiscardGuard';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
+import { useQueryParams } from '../hooks/useQueryParams';
 import './Clients.css';
 
 export function Clients() {
   const [clients, setClients] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({ name: '', email: '', company: '' });
+  const { getParam, setParam } = useQueryParams();
+  const searchQuery = getParam('q');
   const [isDirty, setIsDirty] = useState(false);
   const toast = useToast();
   const { isSubmitting, guard } = useSubmitGuard();
@@ -86,7 +88,7 @@ export function Clients() {
             icon={<Search size={16} />}
             className="search-input"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setParam('q', e.target.value)}
           />
           <Button variant="secondary" className="sort-btn">
             <Filter size={16} /> Sort

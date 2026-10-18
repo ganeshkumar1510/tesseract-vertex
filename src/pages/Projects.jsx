@@ -12,6 +12,7 @@ import { formatMoney } from '../utils/format';
 import { useToast } from '../hooks/useToast';
 import { useDiscardGuard } from '../hooks/useDiscardGuard';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
+import { useQueryParams } from '../hooks/useQueryParams';
 import './Projects.css';
 import './Clients.css';
 
@@ -20,9 +21,10 @@ export function Projects() {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeStatusFilter, setActiveStatusFilter] = useState('All');
   const currency = getCurrency();
+  const { getParam, setParam } = useQueryParams();
+  const searchQuery = getParam('q');
+  const activeStatusFilter = getParam('status', 'All');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -207,7 +209,7 @@ export function Projects() {
             icon={<Search size={16} />}
             className="search-input"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setParam('q', e.target.value)}
           />
           <Button variant="primary" onClick={handleOpenModal}>
             <Plus size={16} /> New Project
@@ -254,7 +256,7 @@ export function Projects() {
                 key={tab}
                 type="button"
                 className={`projects-tab-btn ${activeStatusFilter === tab ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter(tab)}
+                onClick={() => setParam('status', tab === 'All' ? '' : tab)}
               >
                 <span>{tab}</span>
                 <span className="tab-count">{count}</span>
