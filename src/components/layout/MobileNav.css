@@ -17,7 +17,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  padding: 6px 14px;
+  min-height: 44px;
+  min-width: 48px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 10px;
@@ -26,7 +31,7 @@
 }
 
 .m-nav-item.active {
-  color: var(--accent-primary);
+  color: var(--color-link);
 }
 
 .m-nav-item span {

@@ -105,7 +105,6 @@
 }
 
 .text-danger { color: var(--danger); }
-.text-accent { color: var(--accent-primary); }
 
 .count-badge.red {
   background-color: var(--danger-light);

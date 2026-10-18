@@ -256,9 +256,9 @@ export function ProjectDetail() {
           </div>
           
           <div className="project-quick-info">
-            <span>Client: <strong className="text-primary">{project.client || 'General'}</strong></span>
-            <span>Value: <strong className="text-primary">{formatMoney(project.value || 0, currency)}</strong></span>
-            <span>Created: <strong className="text-primary">{new Date(project.createdAt).toLocaleDateString()}</strong></span>
+            <span>Client: <strong className="text-accent">{project.client || 'General'}</strong></span>
+            <span>Value: <strong className="text-accent">{formatMoney(project.value || 0, currency)}</strong></span>
+            <span>Created: <strong className="text-accent">{new Date(project.createdAt).toLocaleDateString()}</strong></span>
           </div>
           
           <div className="header-actions">

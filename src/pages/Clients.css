@@ -170,7 +170,9 @@
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 4px;
+  padding: 8px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: var(--radius-md);
   cursor: pointer;
   display: flex;

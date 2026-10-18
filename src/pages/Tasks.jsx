@@ -381,7 +381,7 @@ export function Tasks() {
 
         {showSection('This Week') && (activeFilter === 'This Week' || tasksByStatus.thisWeek.length > 0) && (
           <div className="task-section">
-            <h3 className="section-title text-primary">
+            <h3 className="section-title text-accent">
               Upcoming This Week <span className="count-badge">{tasksByStatus.thisWeek.length}</span>
             </h3>
             <div className="tasks-list">

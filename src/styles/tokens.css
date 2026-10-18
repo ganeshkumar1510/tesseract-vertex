@@ -18,9 +18,13 @@
 
   /* Primary */
   --color-primary:          #7c3aed;
-  --color-primary-hover:    #8b5cf6;
+  --color-primary-hover:    #8452ea;
   --color-primary-pressed:  #6d28d9;
   --color-primary-text:     #FFFFFF;
+
+  /* Links (WCAG AA text on dark surfaces) */
+  --color-link:             #a78bfa;
+  --color-link-hover:       #c4b5fd;
 
   /* Violet Spectrum */
   --color-violet-singularity: #2e1065;
@@ -38,7 +42,7 @@
   /* Text */
   --color-text-primary:    #EDE9FF;
   --color-text-secondary:  #9791C0;
-  --color-text-muted:      #524D78;
+  --color-text-muted:      #837da8;
   --color-text-disabled:   #2E2C47;
   --color-text-on-primary: #FFFFFF;
 
@@ -97,6 +101,10 @@
   --color-primary-pressed:  #333333;
   --color-primary-text:     #FFFFFF;
 
+  /* Links */
+  --color-link:             #000000;
+  --color-link-hover:       #333333;
+
   /* Violet spectrum — all set to greyscale equivalents */
   --color-violet-singularity: #1A1A1A;
   --color-violet-wormhole:    #333333;
@@ -113,7 +121,7 @@
   /* Text */
   --color-text-primary:    #000000;
   --color-text-secondary:  #6B6B6B;
-  --color-text-muted:      #ADADAD;
+  --color-text-muted:      #6f6f6f;
   --color-text-disabled:   #D4D4D4;
   --color-text-on-primary: #FFFFFF;
 
