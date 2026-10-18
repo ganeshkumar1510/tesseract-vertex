@@ -11,6 +11,15 @@ const app = express();
 app.disable('x-powered-by');
 app.use(express.json());
 
+// Vercel rewrites /api/(.*) to this function file. Restore the original
+// /api/... path for the express router regardless of the rewrite form.
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/api/index.js')) {
+    req.url = req.url.replace('/api/index.js', '/api');
+  }
+  next();
+});
+
 function getSupabaseClient() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key = (
