@@ -3,17 +3,17 @@ import { cn } from '../../lib/utils'
 
 export function Card({ variant = 'base', className, ...props }) {
   const variants = {
-    base: 'bg-surface-raised border-border-default',
-    elevated: 'bg-surface-elevated border-border-strong',
-    selected: 'bg-surface-elevated border-2 border-border-active',
-    overlay: 'bg-surface-overlay border-border-active',
-    stat: 'bg-surface-raised border-border-default',
+    base: 'bg-surface-raised',
+    elevated: 'bg-surface-elevated',
+    selected: 'bg-surface-elevated',
+    overlay: 'bg-surface-overlay',
+    stat: 'bg-surface-raised',
   }
 
   return (
     <div
       className={cn(
-        'rounded-lg border p-lg transition-all duration-200',
+        'rounded-lg p-lg transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_2px_6px_rgba(0,0,0,0.05)]',
         variants[variant],
         className
       )}

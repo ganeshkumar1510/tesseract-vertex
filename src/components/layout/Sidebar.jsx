@@ -100,7 +100,7 @@ export function Sidebar() {
     'sidebar-nav-item font-display text-[14px]',
     isActive
       ? (isAether
-          ? 'bg-[rgba(124,58,237,0.15)] text-violet-aether hover:text-violet-aether border-l-[3px] border-l-border-active'
+          ? 'bg-[rgba(124,58,237,0.15)] text-violet-aether hover:text-violet-aether'
           : 'bg-primary text-primary-text hover:text-primary-text focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary-text')
       : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated'
   );
