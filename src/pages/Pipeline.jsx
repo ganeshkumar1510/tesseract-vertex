@@ -4,6 +4,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardCode,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -15,6 +16,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { EmptyState } from '../components/ui/EmptyState';
 import { Plus, List, Kanban, Columns } from 'lucide-react';
 import { getData, addDataItem, saveData, getLocalUser, getContext } from '../utils/storage';
 import { formatMoney, formatAddedDate } from '../utils/format';
@@ -40,11 +42,24 @@ function DealCard({ project, stage, currency, onNavigate, overlay }) {
     disabled: overlay,
   });
 
+  const dndProps = overlay ? {} : { ...listeners, ...attributes };
+
+  // Keyboard: space picks the card up for moving (dnd kit), enter opens the
+  // deal. While a keyboard drag is active enter stays the drop key.
+  const handleKeyDown = (event) => {
+    dndProps.onKeyDown?.(event);
+    if (!overlay && event.key === 'Enter' && !isDragging) {
+      event.preventDefault();
+      onNavigate(project.id);
+    }
+  };
+
   return (
     <div
       ref={overlay ? undefined : setNodeRef}
       className={`kanban-card-wrap ${isDragging ? 'is-dragging' : ''}`}
-      {...(overlay ? {} : { ...listeners, ...attributes })}
+      {...dndProps}
+      onKeyDown={handleKeyDown}
     >
     <Card
       className={`kanban-card border-left-${stage.color} ${overlay ? 'drag-overlay-card' : ''}`}
@@ -58,7 +73,7 @@ function DealCard({ project, stage, currency, onNavigate, overlay }) {
       <div className="card-footer">
         <span className="date-added">{formatAddedDate(project.createdAt)}</span>
         <div className="status-indicator">
-          <span className={`status-dot dot-${project.status === 'Active' || project.status === 'In Progress' ? 'green' : project.status === 'Completed' ? 'gray' : 'amber'}`}></span>
+          <span className={`status-dot dot-${stage.color}`}></span>
           {project.status || stage.label}
         </div>
       </div>
@@ -116,7 +131,14 @@ export function Pipeline() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor, {
+      // Space moves the card between stages; enter opens the deal instead.
+      keyboardCodes: {
+        start: [KeyboardCode.Space],
+        cancel: [KeyboardCode.Esc],
+        end: [KeyboardCode.Space, KeyboardCode.Enter, KeyboardCode.Tab],
+      },
+    })
   );
 
   const reloadProjects = useCallback(() => {
@@ -294,7 +316,22 @@ export function Pipeline() {
         </div>
       )}
 
-      {activeView === 'kanban' && (
+      {projects.length === 0 && (
+        <div className="pipeline-empty">
+          <EmptyState
+            icon={Kanban}
+            title="No deals yet"
+            description="Create your first deal to start tracking your pipeline."
+            action={(
+              <Button variant="primary" onClick={() => setIsNewDealOpen(true)}>
+                <Plus size={16} /> New Deal
+              </Button>
+            )}
+          />
+        </div>
+      )}
+
+      {projects.length > 0 && activeView === 'kanban' && (
         <div className="kanban-scroll-area">
           <DndContext
             sensors={sensors}
@@ -305,7 +342,7 @@ export function Pipeline() {
               announcements: dndAnnouncements,
               screenReaderInstructions: {
                 draggable:
-                  'To move a deal between pipeline stages, press space or enter to pick it up, use the arrow keys to choose a column, then press space or enter to drop it. Press escape to cancel.',
+                  'To open a deal, press enter. To move a deal between pipeline stages, press space to pick it up, use the arrow keys to choose a column, then press space or enter to drop it. Press escape to cancel.',
               },
             }}
           >
@@ -335,7 +372,7 @@ export function Pipeline() {
         </div>
       )}
 
-      {activeView === 'list' && (
+      {projects.length > 0 && activeView === 'list' && (
         <div className="pipeline-list">
           {listProjects.map(project => (
             <button type="button" key={project.id} className="pipeline-list-row" onClick={() => goToProject(project.id)}>
@@ -348,7 +385,7 @@ export function Pipeline() {
         </div>
       )}
 
-      {activeView === 'table' && (
+      {projects.length > 0 && activeView === 'table' && (
         <div className="pipeline-table-wrap">
           <table className="pipeline-table">
             <thead>
