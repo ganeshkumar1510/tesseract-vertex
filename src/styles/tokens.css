@@ -32,7 +32,6 @@
   --stage-negotiation: #60a5fa;
   --stage-active:      #2dd4bf;
   --stage-completed:   #9791c0;
-  --stage-lost:        #e8547a;
 
   /* Violet Spectrum */
   --color-violet-singularity: #2e1065;
@@ -57,7 +56,6 @@
   /* Success — Aurora */
   --color-success:         #2DD4BF;
   --color-success-bg:      rgba(45, 212, 191, 0.10);
-  --color-success-border:  #1A7A71;
   --color-success-text:    #2DD4BF;
 
   /* Warning — Helios */
@@ -132,7 +130,6 @@
   --stage-negotiation: #4d4d4d;
   --stage-active:      #333333;
   --stage-completed:   #999999;
-  --stage-lost:        #6b6b6b;
 
   /* Violet spectrum — all set to greyscale equivalents */
   --color-violet-singularity: #1A1A1A;
@@ -157,7 +154,6 @@
   /* Success — greyscale in Quasar */
   --color-success:         #000000;
   --color-success-bg:      #F5F5F5;
-  --color-success-border:  #E5E5E5;
   --color-success-text:    #000000;
 
   /* Warning — greyscale in Quasar */

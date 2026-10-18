@@ -17,7 +17,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'logo.png', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'favicon.png', 'logo.png'],
       manifest: {
         name: 'Tesseract CRM',
         short_name: 'Tesseract',

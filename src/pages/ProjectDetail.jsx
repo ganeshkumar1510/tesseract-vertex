@@ -6,7 +6,7 @@ import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
-import { getData, updateDataItem, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
+import { getData, updateDataItem, addDataItem, stageForStatus, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
 import { invoiceTotal } from '../utils/invoice';
 import { useToast } from '../hooks/useToast';

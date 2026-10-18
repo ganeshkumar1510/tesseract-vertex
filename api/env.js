@@ -6,7 +6,7 @@ export function envValue(key, fallback = '') {
 }
 
 /** True on Vercel production or any NODE_ENV=production deployment. */
-export function isProduction() {
+function isProduction() {
   return process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 }
 

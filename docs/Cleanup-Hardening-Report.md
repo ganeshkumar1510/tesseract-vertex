@@ -38,9 +38,10 @@ Highlights:
 - Removed dead CSS rules across eight stylesheets, deleted the unused
   `SkeletonLoader` component, and pruned seven dead exports from the storage
   module (old auth stubs and theme helpers).
-- **Deliberate keeps, documented in code:** the violet palette (9 of 11 tokens
-  are reserved brand colours used by future surfaces), `--stage-lost` and
-  `--color-success-border`.
+- **Deliberate keeps, documented in code:** the violet palette (reserved brand
+  colours used by future surfaces). The other two reserved tokens
+  (`--stage-lost`, `--color-success-border`) were removed by the final
+  dead-code sweep once they proved orphaned — see *Final sweep* below.
 
 ### Phase 2 — Typography made semantic (`3718dad`)
 
@@ -113,11 +114,46 @@ Highlights:
 - **CI:** GitHub Actions workflow runs lint → tests → build on every push/PR.
 - `npm start` now serves the production build locally for smoke checks.
 
+### Final sweep — dead / unfinished code audit (this commit)
+
+Repository-wide audit for unused files, exports, dependencies and unreferenced
+assets before release:
+
+- **Deleted:** two never-imported components (`ErrorState`, `StatusDot` — the
+  latter already flagged in the Phase 2 ledger), one orphaned API route
+  (`GET /api/dashboard`, no caller) with its auth middleware, an unused helper
+  (`addClient`), an unused constant (`PIPELINE_STAGES`) and two orphaned design
+  tokens (`--stage-lost`, `--color-success-border`).
+- **Un-exported (kept, still used internally):** `getTaskCategory`,
+  `isProduction`, `databaseUrlConfigured`.
+- **Removed dead dependencies:** `bcrypt`, `body-parser` (Express 5 has
+  built-in JSON parsing), `@dnd-kit/sortable`, `@dnd-kit/utilities` (only
+  `@dnd-kit/core` is used), `@tailwindcss/postcss` (the build uses Tailwind 3
+  via `postcss.config.js`), `@types/react`, `@types/react-dom` and
+  `typescript` (no TypeScript sources; `prisma.config.ts` is compiled by
+  Prisma's bundled loader — verified by a full build after removal).
+- **Fixed broken asset references:** the PWA manifest and precache list pointed
+  at `logo.png`, `favicon.png` and `icons.svg` — none of which existed. The two
+  PNG icons are now generated from the SVG mark; the dead `icons.svg` reference
+  was dropped; the Apple touch icon now uses a PNG (iOS ignores SVG icons).
+- **Removed dead config:** `VITE_TEST_PIN` was never read by any code.
+- **One-off debug artifacts removed:** `scripts/verify-data-sync.mjs` and its
+  `.cursor` log (single-use debugging harness). The Supabase validator script
+  is now wired up as `npm run validate:supabase`.
+- **Kept (verified as intentional, not dead):** the disabled "New workspace"
+  placeholder (QA checklist §9.5, workspace KT doc §5.5), the UAT panel,
+  `notifyWorkspaceChange()` (documented bulk-refresh hook), and the Prisma
+  cloud models / `archival_triggers.sql` (documented future cloud layer).
+- **Evidence:** lint 0 errors / 14 warnings; tests 14/14; build green with no
+  PWA asset warnings; API harness 24/24; DOM sweep 23 page-passes, 0 missing
+  classes, 0 console errors; dead-code audit: zero unused exports, zero
+  unreferenced files.
+
 ## 3. Verification evidence
 
 | Gate | Result | How it was verified |
 | --- | --- | --- |
-| Lint | 0 errors / 17 warnings (from 20) | `npx eslint .` |
+| Lint | 0 errors / 14 warnings (from 20) | `npx eslint .` |
 | Build | Green, PWA assets generated, no size warnings | `npm run build` |
 | Unit tests | 14 / 14 | `npm test` (vitest) |
 | API security | 24 / 24 | 5-env harness (dev fallback, prod fail-closed, prod placeholder, prod configured + CORS, Vercel detection) incl. rewrite-path login |
@@ -145,7 +181,7 @@ Highlights:
 
 ## 5. Deliberate decisions kept
 
-- **Violet palette reserved** (9 of 11 tokens) as brand colours for upcoming
+- **Violet palette reserved** (11 tokens) as brand colours for upcoming
   surfaces — documented rather than deleted.
 - **Plain card headers** (16 px regular) are the intended look — kept.
 - **Sidebar ≤768 px collapse fix** is prepared but held back pending the

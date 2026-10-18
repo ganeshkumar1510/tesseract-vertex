@@ -89,9 +89,6 @@ const PROJECT_STAGE_ALIASES = {
   Complete: 'Completed',
 };
 
-/** Canonical Pipeline columns, in board order. */
-export const PIPELINE_STAGES = ['Lead', 'Proposal Sent', 'Negotiation', 'Active', 'Completed'];
-
 /**
  * Derives a Pipeline stage for a project that has no explicit stage,
  * based on its operational status. Keeps the Kanban board complete so
@@ -239,10 +236,6 @@ export function updateDataItem(key, id, updates) {
   const merged = (getData(key) || []).find(item => item.id === id);
   if (!merged) return null;
   return addDataItem(key, { ...merged, ...updates, id });
-}
-
-export function addClient(clientData) {
-  return addDataItem('clients', clientData);
 }
 
 export function logActivity(type, description, company = '') {

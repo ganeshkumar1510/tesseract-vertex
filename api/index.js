@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import crypto from 'node:crypto';
 import express from 'express';
-import { verifyToken } from './middleware/auth.js';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 import { getPrisma } from './prisma.js';
@@ -224,23 +223,6 @@ api.post('/system/seed', async (req, res) => {
     res.status(500).json({
       error: { code: 'SEED_FAILED', message: err.message },
     });
-  }
-});
-
-// ==========================================
-// PROTECTED ROUTES
-// ==========================================
-
-api.get('/dashboard', verifyToken, async (req, res) => {
-  try {
-    const prisma = getPrisma();
-    if (!prisma) {
-      return res.json({ data: { projectsCount: 0 } });
-    }
-    const projectsCount = await prisma.project.count({ where: { status: 'In Progress' } });
-    res.json({ data: { projectsCount } });
-  } catch (err) {
-    res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: err.message } });
   }
 });
 

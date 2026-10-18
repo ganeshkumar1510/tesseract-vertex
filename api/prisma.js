@@ -5,7 +5,7 @@ import pg from 'pg';
 let prisma = null;
 let bypassLogged = false;
 
-export function databaseUrlConfigured() {
+function databaseUrlConfigured() {
   const url = process.env.DATABASE_URL || '';
   return url.length > 0 && !url.includes('[YOUR-PASSWORD]');
 }

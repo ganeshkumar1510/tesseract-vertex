@@ -45,7 +45,6 @@ See `.env.example` for the full list. Summary:
 | Variable | Required | Purpose |
 |---|---|---|
 | `VITE_ADMIN_PIN` | yes | Admin PIN (local/UAT). |
-| `VITE_TEST_PIN` | no | Test PIN (local/UAT). |
 | `MASTER_PASSWORD` | yes | API master key for login. Defaults to `VITE_ADMIN_PIN`. |
 | `JWT_SECRET` | yes | Signs session JWTs after login. |
 | `DATABASE_URL` | no | Prisma Postgres connection string. |
@@ -63,7 +62,8 @@ dismissible banner in the app shell makes this explicit. The setup screen
 ready)*, or *Not configured — local mode*, with next-step hints.
 
 When `DATABASE_URL` is configured, run `npx prisma db push` to create tables
-before verifying.
+before verifying. Validate the Supabase fallback credentials with
+`npm run validate:supabase`.
 
 ## Data model: deals vs. projects
 

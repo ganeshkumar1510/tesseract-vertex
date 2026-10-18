@@ -21,7 +21,6 @@ export function InitialSetup() {
   const [step, setStep] = useState(STEP.INTRO);
   const [error, setError] = useState('');
   const [preLoadDemo, setPreLoadDemo] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
   const [dbStatus, setDbStatus] = useState(null);
 
   useEffect(() => {
@@ -63,7 +62,6 @@ export function InitialSetup() {
   };
 
   const initializeEnvironment = async () => {
-    setIsInitializing(true);
     setError('');
 
     try {
@@ -108,7 +106,6 @@ export function InitialSetup() {
       setSetupComplete(true);
       navigate('/login');
     } catch (err) {
-      setIsInitializing(false);
       setError(err.message || 'Environment initialization failed.');
     }
   };

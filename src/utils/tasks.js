@@ -28,7 +28,7 @@ function startOfDay(date) {
  *
  * @returns {'overdue'|'today'|'thisWeek'|'upcoming'|'unscheduled'|'completed'}
  */
-export function getTaskCategory(task, now = new Date()) {
+function getTaskCategory(task, now = new Date()) {
   if (!task) return 'unscheduled';
   if (task.done) return 'completed';
 
