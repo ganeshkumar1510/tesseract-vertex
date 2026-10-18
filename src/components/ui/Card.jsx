@@ -13,7 +13,7 @@ export function Card({ variant = 'base', className, ...props }) {
   return (
     <div
       className={cn(
-        'rounded-lg p-lg transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_2px_6px_rgba(0,0,0,0.05)]',
+        'rounded-lg p-lg transition-all duration-200 border border-border-subtle [box-shadow:var(--shadow-sm)]',
         variants[variant],
         className
       )}
