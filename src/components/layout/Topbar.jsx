@@ -6,6 +6,7 @@ import { Avatar } from '../ui/Avatar';
 import { getLocalUser, getContext } from '../../utils/storage';
 import { ModeToggle } from '../ui/ModeToggle';
 import { Logo } from '../ui/Logo';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import './Topbar.css';
 
 export function Topbar({ onOpenSearch }) {
@@ -27,6 +28,8 @@ export function Topbar({ onOpenSearch }) {
     <header className="topbar">
       <div className="flex items-center gap-md">
         <Logo height={24} />
+        <span className="topbar-divider" aria-hidden="true" />
+        <WorkspaceSwitcher />
       </div>
       <div className="topbar-search" onClick={onOpenSearch}>
         <Input
