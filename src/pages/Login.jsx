@@ -74,7 +74,13 @@ export function Login() {
                 onChange={e => setPassword(e.target.value)}
                 autoFocus
               />
-              <button type="button" className="ob-pin-toggle" onClick={() => setShowPin(!showPin)}>
+              <button
+                type="button"
+                className="ob-pin-toggle"
+                onClick={() => setShowPin(!showPin)}
+                aria-label={showPin ? 'Hide master key' : 'Show master key'}
+                aria-pressed={showPin}
+              >
                 {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
