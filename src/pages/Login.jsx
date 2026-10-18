@@ -4,6 +4,7 @@ import { useAppStore } from '../store/useAppStore';
 import { Shield, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Logo } from '../components/ui/Logo';
+import './InitialSetup.css';
 
 export function Login() {
   const navigate = useNavigate();
@@ -25,17 +26,26 @@ export function Login() {
         body: JSON.stringify({ password })
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
-      if (!res.ok) {
-        throw new Error(data.error?.message || 'Invalid Master Key');
+      if (!res.ok || !data?.data?.token) {
+        throw new Error(data?.error?.message || 'Invalid Master Key');
       }
 
       setAuthToken(data.data.token);
       localStorage.setItem('vtx_jwt', data.data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      if (err instanceof TypeError) {
+        setError('Cannot reach the Vertex server. Confirm the app is running (npm run dev), then try again.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +85,18 @@ export function Login() {
             {isLoading ? 'Decrypting...' : 'Unlock Orbit'} <ArrowRight size={16} />
           </Button>
         </form>
+
+        <details className="ob-recovery">
+          <summary>Trouble signing in?</summary>
+          <p>
+            The unlock key comes from your workspace environment: <code>MASTER_PASSWORD</code> in the
+            project <code>.env</code> file (<code>VITE_ADMIN_PIN</code> is used when it is unset).
+          </p>
+          <p>
+            Vertex keeps this workspace in your browser. Clearing the site's browser data returns
+            Vertex to initial setup — anything not exported first cannot be recovered.
+          </p>
+        </details>
       </div>
     </div>
   );

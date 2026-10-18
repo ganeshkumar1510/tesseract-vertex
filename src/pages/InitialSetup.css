@@ -400,3 +400,38 @@
   padding: 20px;
 }
 
+
+/* ─────────────────────────────────────────────
+   Login recovery disclosure (V-07)
+   ───────────────────────────────────────────── */
+.ob-recovery {
+  width: 100%;
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.ob-recovery summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.ob-recovery summary:hover {
+  color: var(--text-primary);
+}
+
+.ob-recovery p {
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+
+.ob-recovery code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg-elevated);
+  padding: 1px 4px;
+  border-radius: 4px;
+}

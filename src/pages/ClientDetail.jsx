@@ -6,6 +6,7 @@ import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Input } from '../components/ui/Input';
 import { 
   ArrowLeft, Mail, Phone, FileText, CheckSquare, 
@@ -13,6 +14,9 @@ import {
 } from 'lucide-react';
 import { getData, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { useToast } from '../hooks/useToast';
+import { useDiscardGuard } from '../hooks/useDiscardGuard';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './DetailPages.css';
 import './Clients.css';
 
@@ -39,6 +43,9 @@ export function ClientDetail() {
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectValue, setNewProjectValue] = useState('');
   const [newProjectDeadline, setNewProjectDeadline] = useState('');
+  const [isProjectFormDirty, setIsProjectFormDirty] = useState(false);
+  const toast = useToast();
+  const { isSubmitting, guard } = useSubmitGuard();
 
   const loadClientData = useCallback(() => {
     const allClients = getData('clients') || [];
@@ -134,9 +141,27 @@ export function ClientDetail() {
 
     setActivities(prev => [newAct, ...prev]);
     setLogText('');
+    toast.success(`${logType} logged`);
   };
 
-  const handleCreateProjectForClient = (e) => {
+  const closeProjectModal = () => {
+    setIsProjectModalOpen(false);
+    setNewProjectName('');
+    setNewProjectValue('');
+    setNewProjectDeadline('');
+    setIsProjectFormDirty(false);
+  };
+
+  const { requestClose, discardModalProps } = useDiscardGuard({
+    isDirty: isProjectFormDirty,
+    onClose: closeProjectModal,
+  });
+
+  const markProjectDirty = () => {
+    if (!isProjectFormDirty) setIsProjectFormDirty(true);
+  };
+
+  const handleCreateProjectForClient = guard((e) => {
     e.preventDefault();
     if (!newProjectName.trim() || !client) return;
 
@@ -152,12 +177,10 @@ export function ClientDetail() {
     });
 
     logActivity('note', `Created project: ${newProject.name}`, client.company || client.name);
-    setIsProjectModalOpen(false);
-    setNewProjectName('');
-    setNewProjectValue('');
-    setNewProjectDeadline('');
+    closeProjectModal();
     loadClientData();
-  };
+    toast.success('Project created', newProject.name);
+  });
 
   if (notFound) {
     return (
@@ -429,6 +452,15 @@ export function ClientDetail() {
         {/* TAB 3: INVOICES */}
         {activeTab === 'invoices' && (
           <div className="tab-pane-invoices flex flex-col gap-md">
+            <div className="flex justify-between items-center mb-sm">
+              <h3 className="font-semibold text-lg text-text-primary">
+                Invoices ({invoices.length})
+              </h3>
+              <Button variant="secondary" size="sm" onClick={() => navigate(`/invoices?client=${client.id}`)}>
+                <Plus size={14} /> New Invoice
+              </Button>
+            </div>
+
             {/* Invoice Summary Chips */}
             <div className="grid grid-cols-2 gap-4 mb-sm">
               <Card className="p-md">
@@ -483,8 +515,8 @@ export function ClientDetail() {
                 <p className="text-secondary" style={{ marginBottom: '16px' }}>
                   No invoices generated for this client yet.
                 </p>
-                <Button variant="primary" onClick={() => navigate('/invoices')}>
-                  <Plus size={14} /> Go to Invoices
+                <Button variant="primary" onClick={() => navigate(`/invoices?client=${client.id}`)}>
+                  <Plus size={14} /> New Invoice
                 </Button>
               </Card>
             )}
@@ -588,7 +620,7 @@ export function ClientDetail() {
       {/* Relational New Project Modal (pre-assigned to this client) */}
       <Modal 
         isOpen={isProjectModalOpen} 
-        onClose={() => setIsProjectModalOpen(false)} 
+        onClose={requestClose} 
         title={`New Project for ${client.name}`}
       >
         <form onSubmit={handleCreateProjectForClient} className="flex flex-col gap-4">
@@ -598,7 +630,10 @@ export function ClientDetail() {
               name="projectName"
               placeholder="e.g. Website Overhaul"
               value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
+              onChange={(e) => {
+                setNewProjectName(e.target.value);
+                markProjectDirty();
+              }}
               autoFocus
               required
             />
@@ -612,7 +647,10 @@ export function ClientDetail() {
                 type="number"
                 placeholder="e.g. 7500"
                 value={newProjectValue}
-                onChange={(e) => setNewProjectValue(e.target.value)}
+                onChange={(e) => {
+                  setNewProjectValue(e.target.value);
+                  markProjectDirty();
+                }}
               />
             </div>
 
@@ -622,16 +660,21 @@ export function ClientDetail() {
                 name="projectDeadline"
                 type="date"
                 value={newProjectDeadline}
-                onChange={(e) => setNewProjectDeadline(e.target.value)}
+                onChange={(e) => {
+                  setNewProjectDeadline(e.target.value);
+                  markProjectDirty();
+                }}
               />
             </div>
           </div>
 
-          <Button type="submit" className="mt-2">
+          <Button type="submit" className="mt-2" disabled={isSubmitting}>
             Create Project
           </Button>
         </form>
       </Modal>
+
+      <ConfirmModal {...discardModalProps} />
     </div>
   );
 }

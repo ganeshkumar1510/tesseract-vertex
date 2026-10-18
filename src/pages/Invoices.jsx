@@ -12,21 +12,23 @@ import { Input } from '../components/ui/Input';
 import { useToast } from '../hooks/useToast';
 import { useDiscardGuard } from '../hooks/useDiscardGuard';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
+import { useQueryParams } from '../hooks/useQueryParams';
 import './Invoices.css';
 import './Clients.css';
 
 export function Invoices() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { getParam, setParam } = useQueryParams();
+  const [isModalOpen, setIsModalOpen] = useState(() => Boolean(getParam('client')));
   const { username } = getContext();
   const user = getLocalUser(username);
   const currency = user.currency || 'USD';
 
   const [invoices, setInvoices] = useState([]);
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useState(() => getData('clients') || []);
   const [projects, setProjects] = useState([]);
 
   // Form State
-  const [selectedClientId, setSelectedClientId] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState(() => getParam('client') || '');
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [amount, setAmount] = useState('');
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -132,6 +134,9 @@ export function Invoices() {
     setIsModalOpen(false);
     setIsDirty(false);
     setFormError('');
+    if (getParam('client')) {
+      setParam('client', '');
+    }
   };
 
   const { requestClose, discardModalProps } = useDiscardGuard({
