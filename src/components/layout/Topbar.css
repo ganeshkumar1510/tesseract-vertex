@@ -16,13 +16,6 @@
   cursor: pointer;
 }
 
-.topbar-divider {
-  width: 1px;
-  height: 20px;
-  flex-shrink: 0;
-  background-color: var(--border-color-bright);
-}
-
 .global-search .input {
   background-color: var(--bg-elevated);
   border-color: var(--border-color-bright);
