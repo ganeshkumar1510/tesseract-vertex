@@ -11,7 +11,6 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  overflow: hidden;
   margin-left: var(--space-lg);
 }
 
@@ -29,7 +28,12 @@
   transition: all 0.2s;
 }
 
+.view-btn:first-child {
+  border-radius: calc(var(--radius-md) - 1px) 0 0 calc(var(--radius-md) - 1px);
+}
+
 .view-btn:last-child {
+  border-radius: 0 calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0;
   border-right: none;
 }
 
@@ -83,6 +87,7 @@
   background-color: var(--color-surface-sunken);
   border: 1px solid var(--border-color-subtle);
   border-radius: var(--radius-lg);
+  overflow: hidden; /* Clip header accent to the column radius */
   padding-bottom: var(--space-xl);
 }
 
@@ -90,7 +95,7 @@
   padding: var(--space-md);
   border-top: 3px solid;
   border-bottom: 1px solid var(--border-color-subtle);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: 0; /* Square corners: the column's overflow clips the accent flush to its radius */
   margin-bottom: var(--space-md);
   background-color: var(--bg-surface);
 }

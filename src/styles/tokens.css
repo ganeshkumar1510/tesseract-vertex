@@ -86,6 +86,9 @@
   /* Accent Utilities */
   --accent-light:          rgba(124, 58, 237, 0.12);
   --accent-glow:           rgba(124, 58, 237, 0.25);
+
+  /* Focus ring */
+  --focus-ring:            #a78bfa;
 }
 
 /* ══════════════════════════════════════
@@ -177,4 +180,7 @@
   /* Accent Utilities */
   --accent-light:          rgba(0, 0, 0, 0.05);
   --accent-glow:           rgba(0, 0, 0, 0.15);
+
+  /* Focus ring */
+  --focus-ring:            #000000;
 }
