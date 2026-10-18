@@ -14,9 +14,13 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Plus, List, Kanban, Columns } from 'lucide-react';
 import { getData, addDataItem, saveData, getLocalUser, getContext } from '../utils/storage';
 import { formatMoney, formatAddedDate } from '../utils/format';
+import { useToast } from '../hooks/useToast';
+import { useDiscardGuard } from '../hooks/useDiscardGuard';
+import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Pipeline.css';
 
 const STAGES = [
@@ -103,9 +107,12 @@ export function Pipeline() {
   const [isNewDealOpen, setIsNewDealOpen] = useState(false);
   const [dealForm, setDealForm] = useState(emptyDealForm);
   const [nameError, setNameError] = useState('');
+  const [isDealFormDirty, setIsDealFormDirty] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [dragError, setDragError] = useState('');
   const [currency, setCurrency] = useState(() => getLocalUser(getContext().username).currency || 'USD');
+  const toast = useToast();
+  const { isSubmitting, guard } = useSubmitGuard();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -144,9 +151,19 @@ export function Pipeline() {
     setIsNewDealOpen(false);
     setDealForm(emptyDealForm);
     setNameError('');
+    setIsDealFormDirty(false);
   };
 
-  const handleCreateDeal = (e) => {
+  const { requestClose, discardModalProps } = useDiscardGuard({
+    isDirty: isDealFormDirty,
+    onClose: closeDealModal,
+  });
+
+  const markDealDirty = () => {
+    if (!isDealFormDirty) setIsDealFormDirty(true);
+  };
+
+  const handleCreateDeal = guard((e) => {
     e.preventDefault();
     const title = dealForm.title.trim();
     if (!title) {
@@ -164,7 +181,8 @@ export function Pipeline() {
       status: 'In Progress',
     });
     closeDealModal();
-  };
+    toast.success('Deal created', title);
+  });
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
@@ -357,7 +375,7 @@ export function Pipeline() {
         </div>
       )}
 
-      <Modal isOpen={isNewDealOpen} onClose={closeDealModal} title="New Deal">
+      <Modal isOpen={isNewDealOpen} onClose={requestClose} title="New Deal">
         <form onSubmit={handleCreateDeal} className="flex flex-col gap-4">
           <div className="form-group">
             <label htmlFor="deal-name">Deal Name</label>
@@ -367,6 +385,7 @@ export function Pipeline() {
               onChange={(e) => {
                 setDealForm({ ...dealForm, title: e.target.value });
                 if (nameError) setNameError('');
+                markDealDirty();
               }}
               placeholder="Deal name"
               autoFocus
@@ -379,13 +398,21 @@ export function Pipeline() {
               id="deal-client"
               className="form-select"
               value={dealForm.client_id}
-              onChange={(e) => setDealForm({ ...dealForm, client_id: e.target.value })}
+              onChange={(e) => {
+                setDealForm({ ...dealForm, client_id: e.target.value });
+                markDealDirty();
+              }}
             >
               <option value="">None</option>
               {clients.map(c => (
                 <option key={c.id} value={c.id}>{c.company || c.name}</option>
               ))}
             </select>
+            {!dealForm.client_id && (
+              <p className="field-hint">
+                No client linked — assign one later from the project page so this deal can be invoiced.
+              </p>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="deal-value">Estimated Value</label>
@@ -394,14 +421,19 @@ export function Pipeline() {
               type="number"
               min="0"
               value={dealForm.value}
-              onChange={(e) => setDealForm({ ...dealForm, value: e.target.value })}
+              onChange={(e) => {
+                setDealForm({ ...dealForm, value: e.target.value });
+                markDealDirty();
+              }}
               placeholder="0"
             />
           </div>
           <p className="text-secondary" style={{ fontSize: 13, margin: 0 }}>Stage is set to Lead.</p>
-          <Button type="submit">Create Deal</Button>
+          <Button type="submit" disabled={isSubmitting}>Create Deal</Button>
         </form>
       </Modal>
+
+      <ConfirmModal {...discardModalProps} />
     </div>
   );
 }
