@@ -105,7 +105,7 @@
   gap: var(--space-xs);
   font-size: 12px;
   color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: monospace;
 }
 
 .kanban-cards {
@@ -174,7 +174,7 @@
 }
 
 .project-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: monospace;
   font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);

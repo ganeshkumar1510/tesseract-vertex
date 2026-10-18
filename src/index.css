@@ -9,7 +9,7 @@
   :root {
     --font-display: 'Space Grotesk', system-ui, sans-serif;
     --font-body: 'DM Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace; /* Fallback for Geist Mono */
+    --font-mono: monospace;
 
     /* ── Compatibility Layer for Legacy CSS ── */
     --bg-primary:    var(--color-canvas);
@@ -136,7 +136,7 @@ button {
 ::-webkit-scrollbar-thumb:hover { background: var(--neutral); }
 
 /* ── Utilities ── */
-.mono { font-family: 'JetBrains Mono', monospace; }
+.mono { font-family: monospace; }
 
 .flex           { display: flex; }
 .flex-col       { display: flex; flex-direction: column; }

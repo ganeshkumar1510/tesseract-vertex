@@ -254,7 +254,7 @@
   font-size: 14px;
 }
 
-.stat-val { font-weight: 500; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;}
+.stat-val { font-weight: 500; color: var(--text-primary); font-family: monospace;}
 
 .bg-amber-light {
   background-color: var(--warning-light);

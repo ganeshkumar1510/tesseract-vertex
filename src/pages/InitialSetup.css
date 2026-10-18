@@ -140,7 +140,7 @@
 }
 
 .ob-pin-input {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: monospace;
   letter-spacing: 8px;
   font-size: 20px;
   text-align: center;

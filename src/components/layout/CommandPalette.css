@@ -171,7 +171,7 @@ kbd {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 2px 6px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: monospace;
   font-size: 11px;
 }
 
