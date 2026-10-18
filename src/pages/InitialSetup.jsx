@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
+import { useMode } from '../components/providers/ModeProvider';
 import { setContext, setStorageMode } from '../utils/storage';
 import { ArrowRight, Palette, Database, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -8,13 +9,14 @@ import { ModeToggle } from '../components/ui/ModeToggle';
 import { Logo } from '../components/ui/Logo';
 import logoWhite from '../assets/tesseract-mark-white.svg';
 import logoDark from '../assets/tesseract-mark.svg';
-import './InitialSetup.css';
+import './Auth.css';
 
 const STEP = { INTRO: 0, THEME: 1, MOCK_DATA: 2, INIT: 3 };
 
 export function InitialSetup() {
   const navigate = useNavigate();
-  const { themeMode, setThemeMode, setSetupComplete, setDemoEnvironment, isSetupComplete } = useAppStore();
+  const { setSetupComplete, setDemoEnvironment, isSetupComplete } = useAppStore();
+  const { mode } = useMode();
 
   const [step, setStep] = useState(STEP.INTRO);
   const [error, setError] = useState('');
@@ -29,12 +31,9 @@ export function InitialSetup() {
     if (isSetupComplete) {
       navigate('/dashboard');
     }
-    
-    // Ensure the HTML root has the correct theme
-    document.documentElement.setAttribute('data-theme', themeMode);
-  }, [isSetupComplete, themeMode, navigate]);
+  }, [isSetupComplete, navigate]);
 
-  const logoSrc = themeMode === 'quasar' ? logoDark : logoWhite;
+  const logoSrc = mode === 'quasar' ? logoDark : logoWhite;
 
   const handleNext = () => {
     setError('');
@@ -115,12 +114,12 @@ export function InitialSetup() {
   };
 
   return (
-    <div className="ob-page">
-      <div className="ob-card">
+    <div className="auth-page">
+      <div className="auth-card">
         {step !== STEP.INTRO && (
-          <div className="ob-brand">
+          <div className="auth-brand">
             <Logo height={32} />
-            <span className="ob-logo-text">VERTEX</span>
+            <span className="auth-logo-text">VERTEX</span>
           </div>
         )}
 
@@ -143,7 +142,7 @@ export function InitialSetup() {
               </p>
             </div>
 
-            <Button className="ob-btn-primary w-full" onClick={handleNext}>
+            <Button className="auth-btn-primary w-full" onClick={handleNext}>
               Begin new orbits <ArrowRight size={16} />
             </Button>
           </div>
@@ -151,10 +150,10 @@ export function InitialSetup() {
 
         {/* ── STEP 1: Theme Selection ────────────────────────────────────────── */}
         {step === STEP.THEME && (
-          <div className="ob-step ob-theme-picker">
-            <div className="ob-icon-wrap ob-icon-purple"><Palette size={24} /></div>
-            <h1 className="ob-title">Visual Essence</h1>
-            <p className="ob-sub">
+          <div>
+            <div className="auth-icon-wrap auth-icon-purple"><Palette size={24} /></div>
+            <h1 className="auth-title">Visual Essence</h1>
+            <p className="auth-sub">
               Choose the interface mode that aligns with your focus.
             </p>
             
@@ -166,19 +165,19 @@ export function InitialSetup() {
               </div>
             </div>
 
-            <Button className="w-full ob-btn-primary" onClick={handleNext}>Confirm Essence <ArrowRight size={16} /></Button>
+            <Button className="w-full auth-btn-primary" onClick={handleNext}>Confirm Essence <ArrowRight size={16} /></Button>
           </div>
         )}
 
         {/* ── STEP 2: Mock Data Option ───────────────────────────────────────── */}
         {step === STEP.MOCK_DATA && (
-          <div className="ob-step">
-            <div className="ob-icon-wrap ob-icon-purple"><Database size={24} /></div>
-            <h1 className="ob-title">Initialise Environment</h1>
-            <p className="ob-sub">Your instance is private. Would you like to seed it with demo records to explore the modules?</p>
+          <div>
+            <div className="auth-icon-wrap auth-icon-purple"><Database size={24} /></div>
+            <h1 className="auth-title">Initialise Environment</h1>
+            <p className="auth-sub">Your instance is private. Would you like to seed it with demo records to explore the modules?</p>
 
-            <div className="ob-field-group mb-xl">
-              <label className="flex items-center gap-sm cursor-pointer p-md border border-border-color rounded-lg hover:border-accent-primary transition-colors">
+            <div className="auth-field-group mb-xl">
+              <label className="flex items-center gap-sm cursor-pointer p-md border border-border rounded-lg hover:border-accent-primary transition-colors">
                 <div className="relative flex items-center">
                   <input 
                     type="checkbox" 
@@ -186,7 +185,7 @@ export function InitialSetup() {
                     checked={preLoadDemo}
                     onChange={e => setPreLoadDemo(e.target.checked)}
                   />
-                  <div className="w-5 h-5 border-2 border-border-color rounded transition-all peer-checked:bg-accent-primary peer-checked:border-accent-primary flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-border rounded transition-all peer-checked:bg-accent-primary peer-checked:border-accent-primary flex items-center justify-center">
                     {preLoadDemo && <CheckCircle size={14} className="text-white" />}
                   </div>
                 </div>
@@ -194,19 +193,19 @@ export function InitialSetup() {
               </label>
             </div>
 
-            <Button className="w-full ob-btn-primary" onClick={handleNext}>Initialise Vertex <ArrowRight size={16} /></Button>
+            <Button className="w-full auth-btn-primary" onClick={handleNext}>Initialise Vertex <ArrowRight size={16} /></Button>
           </div>
         )}
 
         {/* ── STEP 3: Initialisation ────────────────────────────────────────── */}
         {step === STEP.INIT && (
-          <div className="ob-step">
-            <div className="ob-icon-wrap ob-icon-purple">
+          <div>
+            <div className="auth-icon-wrap auth-icon-purple">
               {error ? <AlertTriangle size={24} className="text-red-500" /> : <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-primary"></div>}
             </div>
             
-            <h1 className="ob-title">{error ? 'Initialisation Failed' : 'Aligning Systems...'}</h1>
-            <p className="ob-sub mb-xl">
+            <h1 className="auth-title">{error ? 'Initialisation Failed' : 'Aligning Systems...'}</h1>
+            <p className="auth-sub mb-xl">
               {error ? 'Check your .env file and ensure the API server is running.' : 'Verifying database schema and provisioning your private environment.'}
             </p>
 
@@ -239,7 +238,7 @@ export function InitialSetup() {
                 <div className="p-sm bg-red-500/10 border border-red-500/20 rounded text-red-500 text-sm mb-lg">
                   {error}
                 </div>
-                <Button className="w-full ob-btn-secondary" onClick={initializeEnvironment}>
+                <Button variant="secondary" className="w-full" onClick={initializeEnvironment}>
                   Retry Initialisation
                 </Button>
               </div>

@@ -1,6 +1,6 @@
-/* ─── Onboarding Page ─────────────────────────────────────────────────────── */
+/* ─── Auth pages (initial setup + master-key login) ───────────────────────── */
 
-.ob-page {
+.auth-page {
   min-height: 100vh;
   width: 100vw;
   display: flex;
@@ -13,7 +13,7 @@
   padding: var(--space-xl);
 }
 
-.ob-card {
+.auth-card {
   width: 100%;
   max-width: 560px;
   background: var(--bg-surface);
@@ -24,13 +24,13 @@
   backdrop-filter: blur(10px);
 }
 
-.quasar .ob-card {
+.quasar .auth-card {
   border: 1px solid #000;
 }
 
 /* ─── Brand header ─────────────────────────────────────────────────────────── */
 
-.ob-brand {
+.auth-brand {
   display: flex;
   align-items: center;
   gap: var(--space-md);
@@ -38,7 +38,7 @@
   justify-content: center;
 }
 
-.ob-logo-text {
+.auth-logo-text {
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
@@ -48,7 +48,7 @@
 
 /* ─── Step icon badge ──────────────────────────────────────────────────────── */
 
-.ob-icon-wrap {
+.auth-icon-wrap {
   width: 52px;
   height: 52px;
   border-radius: 14px;
@@ -58,11 +58,11 @@
   margin: 0 auto var(--space-md);
 }
 
-.ob-icon-purple { background: var(--accent-light); color: var(--accent-primary); border: 1px solid var(--accent-subtle); }
+.auth-icon-purple { background: var(--accent-light); color: var(--accent-primary); border: 1px solid var(--accent-subtle); }
 
 /* ─── Typography ───────────────────────────────────────────────────────────── */
 
-.ob-title {
+.auth-title {
   font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
@@ -71,7 +71,7 @@
   letter-spacing: -0.03em;
 }
 
-.ob-sub {
+.auth-sub {
   font-size: 15px;
   color: var(--text-secondary);
   margin: 0 0 var(--space-xl);
@@ -80,13 +80,13 @@
 
 /* ─── Inputs ───────────────────────────────────────────────────────────────── */
 
-.ob-field-group {
+.auth-field-group {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
 }
 
-.ob-input {
+.auth-input {
   width: 100%;
   padding: 12px 16px;
   font-size: 15px;
@@ -99,25 +99,25 @@
   outline: none;
 }
 
-.ob-input:focus {
+.auth-input:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 4px var(--accent-glow);
   background: var(--bg-overlay);
 }
 
-.ob-input::placeholder {
+.auth-input::placeholder {
   color: var(--text-muted);
 }
 
 /* ─── PIN input ────────────────────────────────────────────────────────────── */
 
-.ob-pin-wrap {
+.auth-pin-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.ob-pin-input {
+.auth-pin-input {
   font-family: monospace;
   letter-spacing: 8px;
   font-size: 20px;
@@ -125,7 +125,7 @@
   padding-right: 48px;
 }
 
-.ob-pin-toggle {
+.auth-pin-toggle {
   position: absolute;
   right: 14px;
   background: none;
@@ -138,19 +138,19 @@
   border-radius: var(--radius-sm);
 }
 
-.ob-pin-toggle:hover {
+.auth-pin-toggle:hover {
   color: var(--text-primary);
 }
 
 /* The browser's built-in Edge password reveal would duplicate the custom
    toggle - hide it so exactly one visibility control remains. */
-.ob-pin-input::-ms-reveal {
+.auth-pin-input::-ms-reveal {
   display: none;
 }
 
 /* ─── Buttons ──────────────────────────────────────────────────────────────── */
 
-.ob-btn-primary {
+.auth-btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,19 +168,19 @@
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
-.ob-btn-primary:hover {
+.auth-btn-primary:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 6px 20px var(--accent-glow);
 }
 
-.ob-btn-primary:active {
+.auth-btn-primary:active {
   transform: translateY(0);
 }
 
 /* ─── Error ────────────────────────────────────────────────────────────────── */
 
-.ob-error {
+.auth-error {
   color: var(--danger);
   font-size: 13px;
   background: var(--danger-light);
@@ -192,7 +192,7 @@
 /* ─────────────────────────────────────────────
    Login recovery disclosure (V-07)
    ───────────────────────────────────────────── */
-.ob-recovery {
+.auth-recovery {
   width: 100%;
   margin-top: 16px;
   font-size: 12.5px;
@@ -200,23 +200,23 @@
   text-align: left;
 }
 
-.ob-recovery summary {
+.auth-recovery summary {
   cursor: pointer;
   font-size: 13px;
   color: var(--text-secondary);
   user-select: none;
 }
 
-.ob-recovery summary:hover {
+.auth-recovery summary:hover {
   color: var(--text-primary);
 }
 
-.ob-recovery p {
+.auth-recovery p {
   margin: 8px 0 0;
   line-height: 1.55;
 }
 
-.ob-recovery code {
+.auth-recovery code {
   font-family: var(--font-mono);
   font-size: 12px;
   background: var(--bg-elevated);

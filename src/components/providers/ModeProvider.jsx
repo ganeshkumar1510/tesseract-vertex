@@ -9,18 +9,20 @@ const ModeContext = createContext({
   setMode: () => {},
 })
 
+/** Reads the persisted mode synchronously so the first paint already has it. */
+function readStoredMode() {
+  if (typeof window === 'undefined') return 'quasar'
+  const saved = localStorage.getItem('vertex-mode')
+  return saved === 'aether' || saved === 'quasar' ? saved : 'quasar'
+}
+
 export function ModeProvider({ children }) {
-  const [mode, setModeState] = useState('quasar')
+  const [mode, setModeState] = useState(readStoredMode)
 
   useEffect(() => {
-    const saved = localStorage.getItem('vertex-mode')
-    if (saved === 'aether' || saved === 'quasar') {
-      setModeState(saved)
-    }
-  }, [])
-
-  useEffect(() => {
-    document.documentElement.className = mode
+    const root = document.documentElement
+    root.classList.toggle('aether', mode === 'aether')
+    root.classList.toggle('quasar', mode === 'quasar')
     localStorage.setItem('vertex-mode', mode)
   }, [mode])
 

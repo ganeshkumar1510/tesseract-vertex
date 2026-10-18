@@ -31,7 +31,17 @@ export function ModeToggle({ size = 'default', className }) {
 
   return (
     <div
+      role="switch"
+      aria-checked={isAether}
+      aria-label="Aether mode"
+      tabIndex={0}
       onClick={toggle}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          toggle()
+        }
+      }}
       className={cn(
         'mode-toggle-track relative flex items-center cursor-pointer rounded-full p-[3px] select-none',
         config.track,

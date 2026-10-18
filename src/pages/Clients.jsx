@@ -99,7 +99,7 @@ export function Clients() {
         </div>
       </div>
 
-      <Card className="clients-table-card p-none">
+      <Card noPadding className="table-responsive">
         <div className="table-responsive">
           <table className="clients-table">
             <thead>

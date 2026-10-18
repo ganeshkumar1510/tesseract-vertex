@@ -4,16 +4,6 @@ import { persist } from 'zustand/middleware';
 export const useAppStore = create(
   persist(
     (set) => ({
-      // Theme State (Aether or Quasar)
-      themeMode: 'quasar',
-      setThemeMode: (mode) => {
-        set({ themeMode: mode });
-        // Update DOM for CSS variables
-        if (typeof document !== 'undefined') {
-          document.documentElement.setAttribute('data-theme', mode);
-        }
-      },
-
       // Auth State
       authToken: null,
       setAuthToken: (token) => set({ authToken: token }),
@@ -34,7 +24,6 @@ export const useAppStore = create(
     {
       name: 'vertex-storage', // unique name for localStorage
       partialize: (state) => ({
-        themeMode: state.themeMode,
         sidebarMode: state.sidebarMode,
         authToken: state.authToken,
         isSetupComplete: state.isSetupComplete,

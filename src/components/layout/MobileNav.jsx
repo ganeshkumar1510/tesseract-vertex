@@ -6,7 +6,7 @@ import './MobileNav.css';
 export function MobileNav() {
   return (
     <nav className="mobile-nav">
-      <NavLink to="/home" className={({ isActive }) => `m-nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to="/dashboard" className={({ isActive }) => `m-nav-item ${isActive ? 'active' : ''}`}>
         <LayoutDashboard size={20} />
         <span>Home</span>
       </NavLink>

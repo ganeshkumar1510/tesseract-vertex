@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { getData, updateDataItem, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { invoiceTotal } from '../utils/invoice';
 import { useToast } from '../hooks/useToast';
 import { 
   ArrowLeft, FileText, CheckSquare, Mail, 
@@ -184,11 +185,11 @@ export function ProjectDetail() {
 
   // Financial calculations
   const totalInvoiced = useMemo(() => {
-    return invoices.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+    return invoices.reduce((sum, inv) => sum + invoiceTotal(inv), 0);
   }, [invoices]);
 
   const totalPaid = useMemo(() => {
-    return invoices.filter(inv => inv.status === 'Paid').reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+    return invoices.filter(inv => inv.status === 'Paid').reduce((sum, inv) => sum + invoiceTotal(inv), 0);
   }, [invoices]);
 
   const progressPercent = useMemo(() => {
@@ -453,7 +454,7 @@ export function ProjectDetail() {
               </div>
 
               {invoices.length > 0 ? (
-                <Card className="p-none table-responsive">
+                <Card noPadding className="table-responsive">
                   <table className="clients-table">
                     <thead>
                       <tr>
@@ -468,7 +469,7 @@ export function ProjectDetail() {
                       {invoices.map(inv => (
                         <tr key={inv.id} className="client-row">
                           <td className="font-mono font-medium">{inv.id}</td>
-                          <td className="font-mono font-semibold">{formatMoney(Number(inv.amount) || 0, currency)}</td>
+                          <td className="font-mono font-semibold">{formatMoney(invoiceTotal(inv), inv.currency_code || currency)}</td>
                           <td className="text-secondary">{inv.issued || '—'}</td>
                           <td className="text-secondary">{inv.due || '—'}</td>
                           <td>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Terminal } from 'lucide-react'
 
-export function Logo({ height = 24, className }) {
+export function Logo({ height = 24, className = '' }) {
   return (
     <div 
       className={`flex items-center justify-center rounded-md border border-primary bg-accent-light backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-accent-glow ${className}`} 

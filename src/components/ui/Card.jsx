@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '../../lib/utils'
 
-export function Card({ variant = 'base', className, ...props }) {
+export function Card({ variant = 'base', noPadding = false, className, ...props }) {
   const variants = {
     base: 'bg-surface-raised',
     elevated: 'bg-surface-elevated',
@@ -13,7 +13,8 @@ export function Card({ variant = 'base', className, ...props }) {
   return (
     <div
       className={cn(
-        'rounded-lg p-lg transition-all duration-200 border border-border-subtle [box-shadow:var(--shadow-sm)]',
+        'rounded-lg transition-all duration-200 border border-border-subtle [box-shadow:var(--shadow-sm)]',
+        !noPadding && 'p-lg',
         variants[variant],
         className
       )}

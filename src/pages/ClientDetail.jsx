@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getData, addDataItem, logActivity, stageForStatus, getCurrency } from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { invoiceTotal } from '../utils/invoice';
 import { useToast } from '../hooks/useToast';
 import { useDiscardGuard } from '../hooks/useDiscardGuard';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
@@ -107,14 +108,14 @@ export function ClientDetail() {
   const stats = useMemo(() => {
     const lifetimeRevenue = invoices
       .filter(i => i.status === 'Paid')
-      .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      .reduce((sum, i) => sum + invoiceTotal(i), 0);
 
     const unpaidBalance = invoices
       .filter(i => i.status !== 'Paid')
-      .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      .reduce((sum, i) => sum + invoiceTotal(i), 0);
 
     const totalInvoiced = invoices
-      .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      .reduce((sum, i) => sum + invoiceTotal(i), 0);
 
     const activeProjects = projects
       .filter(p => p.status !== 'Completed' && p.status !== 'Archived').length;
@@ -391,7 +392,7 @@ export function ClientDetail() {
             </div>
 
             {projects.length > 0 ? (
-              <Card className="p-none table-responsive">
+              <Card noPadding className="table-responsive">
                 <table className="clients-table">
                   <thead>
                     <tr>
@@ -478,7 +479,7 @@ export function ClientDetail() {
             </div>
 
             {invoices.length > 0 ? (
-              <Card className="p-none table-responsive">
+              <Card noPadding className="table-responsive">
                 <table className="clients-table">
                   <thead>
                     <tr>
@@ -495,7 +496,7 @@ export function ClientDetail() {
                       <tr key={inv.id} className="client-row">
                         <td className="font-mono font-medium">{inv.id}</td>
                         <td className="text-secondary">{inv.project || 'General Service'}</td>
-                        <td className="font-mono font-semibold">{formatMoney(Number(inv.amount) || 0, currency)}</td>
+                        <td className="font-mono font-semibold">{formatMoney(invoiceTotal(inv), inv.currency_code || currency)}</td>
                         <td className="text-secondary">{inv.issued || '—'}</td>
                         <td className={inv.status === 'Overdue' ? 'text-danger font-medium' : 'text-secondary'}>
                           {inv.due || '—'}

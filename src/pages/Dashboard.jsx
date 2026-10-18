@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { getContext, getLocalUser, getData, addDataItem, updateDataItem, logActivity, isDemoMode, stageForStatus } from '../utils/storage';
 import { bucketTasks } from '../utils/tasks';
 import { todayISO, formatMoney } from '../utils/format';
+import { invoiceTotal } from '../utils/invoice';
 import { Plus, Mail, Phone, FileText, ArrowRight, CheckCircle, Database } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
@@ -46,8 +47,8 @@ export function Dashboard() {
   }, [loadDashboardData]);
 
   const sourceData = useMemo(() => {
-    const revenue = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + (i.amount || 0), 0);
-    const pending = invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + (i.amount || 0), 0);
+    const revenue = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + invoiceTotal(i), 0);
+    const pending = invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + invoiceTotal(i), 0);
 
     // Merge tasks: user tasks take priority, mock agenda items only if not shadowed
     const storedTaskIds = new Set(tasks.map(t => t.id));
@@ -200,7 +201,7 @@ export function Dashboard() {
 
       {/* Middle Section */}
       <div className="dashboard-two-col">
-        <div className="col-left">
+        <div>
           <Card className="full-height">
             <CardHeader>Today's Agenda</CardHeader>
             <CardContent>
@@ -227,7 +228,7 @@ export function Dashboard() {
           </Card>
         </div>
 
-        <div className="col-right">
+        <div>
           <Card className="full-height">
             <CardHeader>Recent Activity</CardHeader>
             <CardContent>
@@ -239,7 +240,7 @@ export function Dashboard() {
                       {act.type === 'call' && <Phone size={16} className="icon-green" />}
                       {act.type === 'note' && <FileText size={16} className="icon-amber" />}
                     </div>
-                    <div className="activity-details">
+                    <div>
                       <p className="act-desc">{act.description}</p>
                       <p className="act-meta">
                         {act.company && <span className="company-link">@{act.company}</span>} • {act.time}

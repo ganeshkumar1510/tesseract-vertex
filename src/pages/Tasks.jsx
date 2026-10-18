@@ -253,7 +253,7 @@ export function Tasks() {
       <div className="task-content">
         <span className={`task-title ${task.done ? 'strikethrough' : ''}`}>{task.title}</span>
         <div className="task-meta">
-          <span className={`task-due ${isOverdue ? 'text-danger' : 'text-secondary'}`}>
+          <span className={`${isOverdue ? 'text-danger' : 'text-secondary'}`}>
             {isOverdue && <AlertCircle size={12} style={{ display: 'inline', marginRight: 2 }} />}
             {formatDueLabel(task, isOverdue)}
           </span>
@@ -262,7 +262,7 @@ export function Tasks() {
           {task.project && (
             <>
               <span className="meta-dot">•</span>
-              <span className="task-project">{task.project}</span>
+              <span>{task.project}</span>
             </>
           )}
           {task.priority && (
@@ -342,7 +342,7 @@ export function Tasks() {
       </div>
 
       <form className="quick-add-bar" onSubmit={handleQuickAdd}>
-        <Input name="taskTitle" placeholder="What needs to get done?" className="quick-input" />
+        <Input name="taskTitle" placeholder="What needs to get done?" />
         <Button type="submit" variant="primary">
           <Plus size={16} /> Add Task
         </Button>
@@ -350,7 +350,7 @@ export function Tasks() {
 
       <div className="task-sections">
         {showSection('Overdue') && (activeFilter === 'Overdue' || tasksByStatus.overdue.length > 0) && (
-          <div className="task-section">
+          <div>
             <h3 className="section-title text-danger">
               Overdue <span className="count-badge red">{tasksByStatus.overdue.length}</span>
             </h3>
@@ -363,7 +363,7 @@ export function Tasks() {
         )}
 
         {showSection('Today') && (
-          <div className="task-section">
+          <div>
             <h3 className="section-title text-accent">
               Today's Agenda <span className="count-badge">{tasksByStatus.today.length}</span>
             </h3>
@@ -380,7 +380,7 @@ export function Tasks() {
         )}
 
         {showSection('This Week') && (activeFilter === 'This Week' || tasksByStatus.thisWeek.length > 0) && (
-          <div className="task-section">
+          <div>
             <h3 className="section-title text-accent">
               Upcoming This Week <span className="count-badge">{tasksByStatus.thisWeek.length}</span>
             </h3>
@@ -395,7 +395,7 @@ export function Tasks() {
         )}
 
         {activeFilter === 'All' && tasksByStatus.upcoming.length > 0 && (
-          <div className="task-section">
+          <div>
             <h3 className="section-title text-secondary">
               Later <span className="count-badge">{tasksByStatus.upcoming.length}</span>
             </h3>
@@ -408,7 +408,7 @@ export function Tasks() {
         )}
 
         {activeFilter === 'All' && tasksByStatus.unscheduled.length > 0 && (
-          <div className="task-section">
+          <div>
             <h3 className="section-title text-secondary">
               No Due Date <span className="count-badge">{tasksByStatus.unscheduled.length}</span>
             </h3>
@@ -421,7 +421,7 @@ export function Tasks() {
         )}
 
         {showSection('Completed') && (
-          <div className="task-section">
+          <div>
             <h3 className="section-title text-success">
               Completed <span className="count-badge">{tasksByStatus.completed.length}</span>
             </h3>

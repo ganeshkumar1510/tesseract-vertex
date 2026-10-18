@@ -4,7 +4,7 @@ import { useAppStore } from '../store/useAppStore';
 import { Shield, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Logo } from '../components/ui/Logo';
-import './InitialSetup.css';
+import './Auth.css';
 
 export function Login() {
   const navigate = useNavigate();
@@ -52,23 +52,23 @@ export function Login() {
   };
 
   return (
-    <div className="ob-page">
-      <div className="ob-card">
-        <div className="ob-brand">
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-brand">
           <Logo height={32} />
-          <span className="ob-logo-text">VERTEX</span>
+          <span className="auth-logo-text">VERTEX</span>
         </div>
 
-        <form className="ob-step" onSubmit={handleLogin}>
-          <div className="ob-icon-wrap ob-icon-purple"><Shield size={24} /></div>
-          <h1 className="ob-title">Master Sequence</h1>
-          <p className="ob-sub">Enter your master key to unlock Vertex.</p>
+        <form onSubmit={handleLogin}>
+          <div className="auth-icon-wrap auth-icon-purple"><Shield size={24} /></div>
+          <h1 className="auth-title">Master Sequence</h1>
+          <p className="auth-sub">Enter your master key to unlock Vertex.</p>
 
-          <div className="ob-field-group mb-xl w-full">
-            <div className="ob-pin-wrap">
+          <div className="auth-field-group mb-xl w-full">
+            <div className="auth-pin-wrap">
               <input 
                 type={showPin ? 'text' : 'password'}
-                className="ob-input ob-pin-input text-center" 
+                className="auth-input auth-pin-input text-center" 
                 placeholder="Master Password" 
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -76,7 +76,7 @@ export function Login() {
               />
               <button
                 type="button"
-                className="ob-pin-toggle"
+                className="auth-pin-toggle"
                 onClick={() => setShowPin(!showPin)}
                 aria-label={showPin ? 'Hide master key' : 'Show master key'}
                 aria-pressed={showPin}
@@ -86,13 +86,13 @@ export function Login() {
             </div>
           </div>
 
-          {error && <p className="ob-error mb-lg">{error}</p>}
-          <Button type="submit" className="ob-btn-primary mt-md w-full" disabled={isLoading}>
+          {error && <p className="auth-error mb-lg">{error}</p>}
+          <Button type="submit" className="auth-btn-primary mt-md w-full" disabled={isLoading}>
             {isLoading ? 'Decrypting...' : 'Unlock Orbit'} <ArrowRight size={16} />
           </Button>
         </form>
 
-        <details className="ob-recovery">
+        <details className="auth-recovery">
           <summary>Trouble signing in?</summary>
           <p>
             The unlock key comes from your workspace environment: <code>MASTER_PASSWORD</code> in the

@@ -39,7 +39,7 @@ export function Topbar({ onOpenSearch }) {
       <div className="topbar-actions">
         <ModeToggle size="default" />
         <div className="notification-wrapper">
-          <Button variant="ghost" className="icon-only">
+          <Button variant="ghost">
             <Bell size={20} />
           </Button>
           <span className="notification-dot"></span>

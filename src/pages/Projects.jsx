@@ -267,7 +267,7 @@ export function Projects() {
       </div>
 
       {/* Projects Table */}
-      <Card className="p-none table-responsive">
+      <Card noPadding className="table-responsive">
         <table className="clients-table">
           <thead>
             <tr>
