@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { Plus, Send, Download, AlertCircle } from 'lucide-react';
+import { Plus, Send, Download, AlertCircle, Trash2 } from 'lucide-react';
 import { generateInvoicePDF } from '../utils/pdfGenerator';
 import { getLocalUser, getData, addDataItem, updateDataItem, getContext, logActivity } from '../utils/storage';
 import { formatMoney } from '../utils/format';
+import { createLineItem, normalizeLineItems, lineItemAmount, invoiceTotal, invoiceItemCount, round2 } from '../utils/invoice';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Input } from '../components/ui/Input';
@@ -30,7 +31,7 @@ export function Invoices() {
   // Form State
   const [selectedClientId, setSelectedClientId] = useState(() => getParam('client') || '');
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [amount, setAmount] = useState('');
+  const [lineItems, setLineItems] = useState(() => [createLineItem()]);
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(() => {
     const net15 = new Date(Date.now() + 15 * 86400000);
@@ -88,16 +89,38 @@ export function Invoices() {
 
   // Metrics
   const totalOutstanding = useMemo(() => {
-    return invoices.filter(i => i.status !== 'Paid').reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    return invoices.filter(i => i.status !== 'Paid').reduce((sum, i) => sum + invoiceTotal(i), 0);
   }, [invoices]);
 
   const totalOverdue = useMemo(() => {
-    return invoices.filter(i => i.status === 'Overdue').reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    return invoices.filter(i => i.status === 'Overdue').reduce((sum, i) => sum + invoiceTotal(i), 0);
   }, [invoices]);
 
   const totalPaid = useMemo(() => {
-    return invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    return invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + invoiceTotal(i), 0);
   }, [invoices]);
+
+  // Live total of the invoice currently being drafted
+  const draftTotal = useMemo(
+    () => round2(lineItems.reduce((sum, it) => sum + lineItemAmount(it), 0)),
+    [lineItems]
+  );
+
+  // ── Line item editing ──────────────────────────────────────────────────
+  const addLineItem = () => {
+    setLineItems(prev => [...prev, createLineItem()]);
+    markDirty();
+  };
+
+  const updateLineItem = (id, patch) => {
+    setLineItems(prev => prev.map(it => (it.id === id ? { ...it, ...patch } : it)));
+    markDirty();
+  };
+
+  const removeLineItem = (id) => {
+    setLineItems(prev => (prev.length > 1 ? prev.filter(it => it.id !== id) : prev));
+    markDirty();
+  };
 
   // Generate Next Invoice ID
   const generateNextInvoiceId = () => {
@@ -124,7 +147,7 @@ export function Invoices() {
     }
     setFormError('');
     setIsDirty(false);
-    setAmount('');
+    setLineItems([createLineItem()]);
     setIssueDate(new Date().toISOString().split('T')[0]);
     setDueDate(new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]);
     setIsModalOpen(true);
@@ -160,6 +183,23 @@ export function Invoices() {
     const projectObj = projects.find(p => p.id === selectedProjectId);
     const invoiceId = generateNextInvoiceId();
 
+    // Validate line items before anything is written
+    const items = normalizeLineItems(lineItems);
+    const total = round2(items.reduce((sum, it) => sum + it.amount, 0));
+
+    if (items.length === 0) {
+      setFormError('Add at least one line item with a description and an amount.');
+      return;
+    }
+    if (total <= 0) {
+      setFormError('Invoice total must be greater than zero.');
+      return;
+    }
+    if (items.some(it => !it.description)) {
+      setFormError('Every line item needs a description.');
+      return;
+    }
+
     const formattedIssued = new Date(issueDate).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -178,7 +218,9 @@ export function Invoices() {
       client: clientObj.company ? `${clientObj.name} (${clientObj.company})` : clientObj.name,
       project_id: projectObj ? projectObj.id : null,
       project: projectObj ? (projectObj.name || projectObj.title) : 'General Retainer / Consulting',
-      amount: parseFloat(amount) || 0,
+      amount: total,
+      line_items: items,
+      currency_code: currency,
       issued: formattedIssued,
       due: formattedDue,
       status: 'Pending',
@@ -191,7 +233,7 @@ export function Invoices() {
 
     setInvoices(prev => [saved, ...prev]);
     closeModal();
-    toast.success('Invoice created', `${saved.id} · ${formatMoney(saved.amount, currency)}`);
+    toast.success('Invoice created', `${saved.id} · ${formatMoney(invoiceTotal(saved), saved.currency_code || currency)}`);
   });
 
   const handleDownload = (invoice) => {
@@ -207,7 +249,7 @@ export function Invoices() {
     if (updated) {
       setInvoices(prev => prev.map(inv => inv.id === invoiceId ? updated : inv));
       logActivity('note', `Invoice ${updated.id} marked as Paid`, updated.client);
-      toast.success('Invoice marked as paid', `${updated.id} · ${formatMoney(Number(updated.amount) || 0, currency)}`);
+      toast.success('Invoice marked as paid', `${updated.id} · ${formatMoney(invoiceTotal(updated), updated.currency_code || currency)}`);
     }
   };
 
@@ -290,18 +332,77 @@ export function Invoices() {
             </div>
 
             <div>
-              <label className="text-xs text-secondary font-medium block mb-1">Invoice Amount ($) *</label>
-              <Input
-                name="amount"
-                placeholder="e.g. 5000"
-                type="number"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  markDirty();
-                }}
-                required
-              />
+              <div className="line-items-head">
+                <span className="text-xs text-secondary font-medium">Line Items *</span>
+                <button type="button" className="line-items-add" onClick={addLineItem}>
+                  <Plus size={14} /> Add item
+                </button>
+              </div>
+
+              <div className="line-items-editor">
+                {lineItems.map((item, idx) => (
+                  <div className="line-item" key={item.id}>
+                    <div className="line-item-top">
+                      <Input
+                        name={`li-desc-${idx}`}
+                        aria-label={`Line item ${idx + 1} description`}
+                        placeholder="e.g. Brand identity design — Phase 1"
+                        value={item.description}
+                        onChange={(e) => updateLineItem(item.id, { description: e.target.value })}
+                      />
+                      <button
+                        type="button"
+                        className="line-item-remove"
+                        onClick={() => removeLineItem(item.id)}
+                        disabled={lineItems.length === 1}
+                        aria-label={`Remove line item ${idx + 1}`}
+                        title={lineItems.length === 1 ? 'An invoice needs at least one line item' : 'Remove line item'}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+
+                    <div className="line-item-bottom">
+                      <div className="li-field li-qty">
+                        <label className="li-label" htmlFor={`li-qty-${idx}`}>Qty</label>
+                        <Input
+                          id={`li-qty-${idx}`}
+                          name={`li-qty-${idx}`}
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={item.quantity}
+                          onChange={(e) => updateLineItem(item.id, { quantity: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="li-field li-rate">
+                        <label className="li-label" htmlFor={`li-rate-${idx}`}>Rate ({currency})</label>
+                        <Input
+                          id={`li-rate-${idx}`}
+                          name={`li-rate-${idx}`}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={item.rate}
+                          onChange={(e) => updateLineItem(item.id, { rate: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="li-field li-amount">
+                        <span className="li-label">Amount</span>
+                        <span className="li-amount-value">{formatMoney(lineItemAmount(item), currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="line-items-total">
+                <span>Total</span>
+                <span className="line-items-total-value">{formatMoney(draftTotal, currency)}</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -363,7 +464,7 @@ export function Invoices() {
         onCancel={() => setInvoicePendingPayment(null)}
       />
 
-      <Card className="p-none table-responsive">
+      <Card noPadding className="table-responsive">
         <table className="clients-table">
           <thead>
             <tr>
@@ -384,7 +485,12 @@ export function Invoices() {
                   <td className="font-mono font-medium">{inv.id}</td>
                   <td className="font-medium">{inv.client}</td>
                   <td className="text-secondary">{inv.project || 'General Service'}</td>
-                  <td className="font-mono font-semibold">{formatMoney(Number(inv.amount) || 0, currency)}</td>
+                  <td className="font-mono font-semibold">
+                    {formatMoney(invoiceTotal(inv), inv.currency_code || currency)}
+                    {invoiceItemCount(inv) > 1 && (
+                      <span className="item-count">{invoiceItemCount(inv)} items</span>
+                    )}
+                  </td>
                   <td className="text-secondary">{inv.issued}</td>
                   <td className={inv.status === 'Overdue' ? 'text-danger font-medium' : 'text-secondary'}>
                     {inv.due}
