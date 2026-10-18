@@ -8,9 +8,9 @@ export const mockData = {
     tasksDueToday: 5
   },
   agenda: [
-    { id: 1, time: '10:00 AM', title: 'Send revised mockups', client: 'Acme Design Co', priority: 'warning', done: false },
-    { id: 2, time: '2:00 PM', title: 'Discovery call with Sarah', client: 'New Lead', priority: 'danger', done: false },
-    { id: 3, time: '4:00 PM', title: 'Follow up on invoice', client: 'StartupXYZ', priority: 'success', done: false }
+    { id: 1, time: '10:00 AM', title: 'Send revised mockups', client: 'Acme Design Co', priority: 'high', done: false },
+    { id: 2, time: '2:00 PM', title: 'Discovery call with Sarah', client: 'New Lead', priority: 'medium', done: false },
+    { id: 3, time: '4:00 PM', title: 'Follow up on invoice', client: 'StartupXYZ', priority: 'low', done: false }
   ],
   activities: [
     { id: 1, type: 'email', description: 'Email opened by John', company: 'TechCorp', time: '2 hours ago' },

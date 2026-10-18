@@ -185,16 +185,6 @@
   color: var(--text-secondary);
 }
 
-.priority-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.priority-danger { background-color: var(--danger); }
-.priority-warning { background-color: var(--warning); }
-.priority-success { background-color: var(--success); }
-
 /* Activity Feed */
 .activity-feed {
   display: flex;
