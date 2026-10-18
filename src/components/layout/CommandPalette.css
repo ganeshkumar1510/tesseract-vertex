@@ -19,6 +19,7 @@
   z-index: 201;
   overflow: hidden;
   border: 1px solid var(--border-color);
+  font-family: var(--font-body);
 }
 
 .cmd-input-wrap {
@@ -38,10 +39,26 @@
   border: none;
   background: transparent;
   padding: var(--space-lg) 0;
-  font-family: inherit;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--text-primary);
   outline: none;
+}
+
+/* Keep the placeholder on the same face as the typed text */
+.cmd-input::placeholder {
+  font-family: inherit;
+}
+
+/* Single intentional focus treatment: the search row highlights instead of a
+   nested ring around the input. The two-class selector outranks the shared
+   :focus-visible rule so no second outline is drawn. */
+.cmd-palette .cmd-input:focus-visible {
+  outline: none;
+}
+
+.cmd-input-wrap:focus-within {
+  border-bottom-color: var(--accent-primary);
 }
 
 .cmd-close {
@@ -156,4 +173,9 @@ kbd {
   padding: 2px 6px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
+}
+
+/* Keyboard hints inside the palette use the UI face, not the mono fallback */
+.cmd-palette kbd {
+  font-family: inherit;
 }
