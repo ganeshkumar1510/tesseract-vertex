@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Folder, Users, FileText, CheckSquare, Settings as SettingsIcon } from 'lucide-react';
 import { getData } from '../../utils/storage';
@@ -16,40 +16,42 @@ export function CommandPalette({ isOpen, onClose }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  
-  // Data Fetching
-  const [clients, setClients] = useState([]);
-  const [projects, setProjects] = useState([]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setClients(getData('clients') || []);
-      setProjects(getData('projects') || []);
-    }
-  }, [isOpen]);
+  const clients = useMemo(() => (isOpen ? getData('clients') || [] : []), [isOpen]);
+  const projects = useMemo(() => (isOpen ? getData('projects') || [] : []), [isOpen]);
 
   const handleAction = useCallback((path) => {
     navigate(path);
     onClose();
     setQuery('');
+    setSelectedIndex(0);
   }, [navigate, onClose]);
 
-  const filteredResults = query ? [
-    ...clients.filter(c => (c.name || '').toLowerCase().includes(query.toLowerCase())).map(c => ({
-      id: `client-${c.id}`,
-      label: c.name,
-      sub: c.company ? `Client • ${c.company}` : 'Client',
-      icon: <Users size={16} />,
-      path: `/clients/${c.id}`
-    })),
-    ...projects.filter(p => (p.name || p.title || '').toLowerCase().includes(query.toLowerCase())).map(p => ({
-      id: `project-${p.id}`,
-      label: p.name || p.title || 'Untitled Project',
-      sub: p.client ? `Project • ${p.client}` : 'Project',
-      icon: <Folder size={16} />,
-      path: `/projects/${p.id}`
-    }))
-  ] : QUICK_ACTIONS;
+  const filteredResults = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return QUICK_ACTIONS;
+
+    return [
+      ...clients
+        .filter(c => (c.name || '').toLowerCase().includes(trimmed))
+        .map(c => ({
+          id: `client-${c.id}`,
+          label: c.name,
+          sub: c.company ? `Client • ${c.company}` : 'Client',
+          icon: <Users size={16} />,
+          path: `/clients/${c.id}`
+        })),
+      ...projects
+        .filter(p => (p.name || p.title || '').toLowerCase().includes(trimmed))
+        .map(p => ({
+          id: `project-${p.id}`,
+          label: p.name || p.title || 'Untitled Project',
+          sub: p.client ? `Project • ${p.client}` : 'Project',
+          icon: <Folder size={16} />,
+          path: `/projects/${p.id}`
+        }))
+    ];
+  }, [query, clients, projects]);
 
   const totalResults = filteredResults.length;
 
@@ -59,11 +61,11 @@ export function CommandPalette({ isOpen, onClose }) {
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev + 1) % totalResults);
+        setSelectedIndex(prev => (prev + 1) % (totalResults || 1));
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev - 1 + totalResults) % totalResults);
+        setSelectedIndex(prev => (prev - 1 + (totalResults || 1)) % (totalResults || 1));
       }
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -75,10 +77,6 @@ export function CommandPalette({ isOpen, onClose }) {
     if (isOpen) window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, totalResults, selectedIndex, filteredResults, handleAction]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
 
   if (!isOpen) return null;
 
@@ -94,16 +92,18 @@ export function CommandPalette({ isOpen, onClose }) {
             className="cmd-input" 
             placeholder="Search clients, projects, or type a command..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
           />
-          <div className="cmd-esc-tag">ESC</div>
+          <span className="cmd-shortcut">ESC</span>
         </div>
 
-        <div className="cmd-results">
-          <div className="cmd-group">
-            <div className="cmd-group-title">{query ? 'Search Results' : 'Quick Actions'}</div>
-            {filteredResults.length > 0 ? filteredResults.map((item, idx) => (
-              <button 
+        <div className="cmd-list">
+          {filteredResults.length > 0 ? (
+            filteredResults.map((item, idx) => (
+              <div 
                 key={item.id} 
                 className={`cmd-item ${idx === selectedIndex ? 'selected' : ''}`}
                 onClick={() => handleAction(item.path)}
@@ -114,16 +114,11 @@ export function CommandPalette({ isOpen, onClose }) {
                   <span className="cmd-item-label">{item.label}</span>
                   {item.sub && <span className="cmd-item-sub">{item.sub}</span>}
                 </div>
-                {idx === selectedIndex && <div className="cmd-enter-tag">↵</div>}
-              </button>
-            )) : (
-              <div className="cmd-empty">No results found for "{query}"</div>
-            )}
-          </div>
-        </div>
-
-        <div className="cmd-footer">
-          Navigate with <kbd>↑</kbd> <kbd>↓</kbd> • Select with <kbd>Enter</kbd>
+              </div>
+            ))
+          ) : (
+            <div className="cmd-empty">No results found for "{query}"</div>
+          )}
         </div>
       </div>
     </>

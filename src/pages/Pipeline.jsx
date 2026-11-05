@@ -151,7 +151,6 @@ export function Pipeline() {
   }, []);
 
   useEffect(() => {
-    reloadProjects();
     const onDataChange = (e) => {
       const key = e.detail?.key;
       if (!key || key === 'projects' || key === 'clients' || key === 'user') reloadProjects();

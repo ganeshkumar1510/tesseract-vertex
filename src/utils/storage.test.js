@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   stageForStatus,
   normalizeProject,
-  validateUserCredentials,
   importStorageJSON,
   wipeStorage,
 } from './storage';
@@ -50,38 +49,6 @@ describe('normalizeProject', () => {
   });
 });
 
-describe('validateUserCredentials', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    vi.unstubAllEnvs();
-  });
-
-  it('accepts the stored password for a known user', () => {
-    localStorage.setItem('vtx_users', JSON.stringify({ dev: { password: 'abc123' } }));
-    expect(validateUserCredentials('dev', 'abc123')).toBe('dev');
-  });
-
-  it('rejects wrong passwords and unknown users', () => {
-    localStorage.setItem('vtx_users', JSON.stringify({ dev: { password: 'abc123' } }));
-    expect(validateUserCredentials('dev', 'nope')).toBeNull();
-    expect(validateUserCredentials('ghost', 'abc123')).toBeNull();
-  });
-
-  it('has no built-in 1510 fallback when VITE_ADMIN_PIN is unset', () => {
-    vi.stubEnv('VITE_ADMIN_PIN', '');
-    localStorage.setItem('vtx_users', JSON.stringify({ dev: { password: 'abc123' } }));
-    expect(validateUserCredentials('dev', '1510')).toBeNull();
-  });
-
-  // In vitest DEV is true, so this documents the dev-only override branch.
-  // The production build's rejection of the same PIN is covered by the
-  // browser E2E suite (cdp-p4.mjs).
-  it('accepts the explicit VITE_ADMIN_PIN override only in dev', () => {
-    vi.stubEnv('VITE_ADMIN_PIN', '1510');
-    expect(validateUserCredentials('dev', '1510')).toBe('system_admin');
-  });
-});
-
 describe('importStorageJSON', () => {
   beforeEach(() => localStorage.clear());
 
@@ -112,7 +79,7 @@ describe('wipeStorage', () => {
   });
 
   it('removes only Vertex-namespaced keys from both storages', () => {
-    localStorage.setItem('vtx_jwt', 'token');
+    localStorage.setItem('vtx_users', '{"dev":{}}');
     localStorage.setItem('live_clients', '[]');
     localStorage.setItem('demo_live_invoices', '[]');
     localStorage.setItem('vertex-mode', 'quasar');
@@ -122,7 +89,7 @@ describe('wipeStorage', () => {
 
     wipeStorage();
 
-    expect(localStorage.getItem('vtx_jwt')).toBeNull();
+    expect(localStorage.getItem('vtx_users')).toBeNull();
     expect(localStorage.getItem('live_clients')).toBeNull();
     expect(localStorage.getItem('demo_live_invoices')).toBeNull();
     expect(localStorage.getItem('vertex-mode')).toBeNull();

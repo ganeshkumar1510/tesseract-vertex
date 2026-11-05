@@ -6,14 +6,14 @@ import { CommandPalette } from './CommandPalette';
 import { UATControls } from './UATControls';
 import { MobileNav } from './MobileNav';
 import { ToastContainer } from '../ui/ToastContainer';
-import { getContext, setContext, getStorageMode } from '../../utils/storage';
+import { getContext, setContext } from '../../utils/storage';
 import { useAppStore } from '../../store/useAppStore';
 import './AppLayout.css';
 
 export function AppLayout() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showLocalBanner, setShowLocalBanner] = useState(
-    () => getStorageMode() === 'local' && sessionStorage.getItem('vtx_local_banner_dismissed') !== '1'
+    () => sessionStorage.getItem('vtx_local_banner_dismissed') !== '1'
   );
 
   const dismissLocalBanner = () => {
@@ -65,7 +65,7 @@ export function AppLayout() {
             }}
           >
             <span>
-              <strong>Local mode</strong> — no database is configured, so your data is stored in this browser only.
+              <strong>Local demo</strong> — all data is stored in this browser only.
             </span>
             <button
               type="button"

@@ -4,11 +4,6 @@ import { persist } from 'zustand/middleware';
 export const useAppStore = create(
   persist(
     (set) => ({
-      // Auth State
-      authToken: null,
-      setAuthToken: (token) => set({ authToken: token }),
-      logout: () => set({ authToken: null }),
-
       // Setup State
       isSetupComplete: false,
       setSetupComplete: (status) => set({ isSetupComplete: status }),
@@ -25,7 +20,6 @@ export const useAppStore = create(
       name: 'vertex-storage', // unique name for localStorage
       partialize: (state) => ({
         sidebarMode: state.sidebarMode,
-        authToken: state.authToken,
         isSetupComplete: state.isSetupComplete,
         isDemoEnvironment: state.isDemoEnvironment,
       }), // Only persist these keys

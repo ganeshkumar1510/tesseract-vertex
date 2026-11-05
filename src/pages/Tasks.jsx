@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
@@ -42,8 +42,8 @@ function taskFromForm(form, projects) {
 export function Tasks() {
   const isDemo = isDemoMode();
 
-  const [persistentTasks, setPersistentTasks] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [persistentTasks, setPersistentTasks] = useState(() => getData('tasks') || []);
+  const [projects, setProjects] = useState(() => getData('projects') || []);
   const { getParam, setParam } = useQueryParams();
   const activeFilter = getParam('filter', 'All');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -56,22 +56,17 @@ export function Tasks() {
   const toast = useToast();
   const { isSubmitting, guard } = useSubmitGuard();
 
-  const loadTasks = useCallback(() => {
-    setPersistentTasks(getData('tasks') || []);
-    setProjects(getData('projects') || []);
-  }, []);
-
   useEffect(() => {
-    loadTasks();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
       if (!key || key === 'tasks' || key === 'projects') {
-        loadTasks();
+        setPersistentTasks(getData('tasks') || []);
+        setProjects(getData('projects') || []);
       }
     };
     window.addEventListener('vertex-data-change', handleDataChange);
     return () => window.removeEventListener('vertex-data-change', handleDataChange);
-  }, [loadTasks]);
+  }, []);
 
   useEffect(() => {
     const closeMenu = () => {

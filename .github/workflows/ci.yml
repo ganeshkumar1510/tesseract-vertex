@@ -8,9 +8,6 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    env:
-      # Placeholder so `prisma generate` can resolve the datasource URL in CI.
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vertex
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

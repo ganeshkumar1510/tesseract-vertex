@@ -18,8 +18,8 @@ import './Clients.css';
 
 export function Projects() {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState([]);
-  const [clients, setClients] = useState([]);
+  const [projects, setProjects] = useState(() => getData('projects') || []);
+  const [clients, setClients] = useState(() => getData('clients') || []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const currency = getCurrency();
   const { getParam, setParam } = useQueryParams();
@@ -48,16 +48,16 @@ export function Projects() {
   }, []);
 
   useEffect(() => {
-    loadData();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
       if (!key || key === 'projects' || key === 'clients' || key === 'user') {
-        loadData();
+        setProjects(getData('projects') || []);
+        setClients(getData('clients') || []);
       }
     };
     window.addEventListener('vertex-data-change', handleDataChange);
     return () => window.removeEventListener('vertex-data-change', handleDataChange);
-  }, [loadData]);
+  }, []);
 
   // Helper to determine if project is overdue
   const isProjectOverdue = (project) => {

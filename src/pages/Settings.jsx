@@ -3,8 +3,8 @@ import { Card, CardHeader, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
-import { User, Bell, Lock, Palette, Link as LinkIcon, Save, Database, Download, Upload, Trash2 } from 'lucide-react';
-import { exportStorageJSON, importStorageJSON, wipeStorage, getLocalUser, getContext, validateUserCredentials, saveUser } from '../utils/storage';
+import { User, Bell, Palette, Link as LinkIcon, Save, Database, Download, Upload, Trash2 } from 'lucide-react';
+import { exportStorageJSON, importStorageJSON, wipeStorage, getLocalUser, getContext, saveUser } from '../utils/storage';
 import { useToast } from '../hooks/useToast';
 import { useSubmitGuard } from '../hooks/useSubmitGuard';
 import './Settings.css';
@@ -15,7 +15,6 @@ const TABS = [
   { id: 'data', label: 'Data & Maintenance', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'integrations', label: 'Integrations', icon: LinkIcon },
-  { id: 'security', label: 'Security', icon: Lock },
 ];
 
 export function Settings() {
@@ -27,13 +26,13 @@ export function Settings() {
     email: user.email || '',
     bio: user.bio || '',
     profession: user.profession || '',
+    domain: user.domain || '',
+    tools: user.tools || '',
     currency: user.currency || 'USD',
   });
   const [workspaceName, setWorkspaceName] = useState(user.workspace || 'VERTEX Studio');
   const [isWipeModalOpen, setIsWipeModalOpen] = useState(false);
   const [wipeError, setWipeError] = useState('');
-  const [securityForm, setSecurityForm] = useState({ current: '', next: '', confirm: '' });
-  const [securityError, setSecurityError] = useState('');
   const toast = useToast();
   const { isSubmitting: isWiping, guard: guardWipe } = useSubmitGuard();
 
@@ -47,6 +46,8 @@ export function Settings() {
           email: next.email || '',
           bio: next.bio || '',
           profession: next.profession || '',
+          domain: next.domain || '',
+          tools: next.tools || '',
           currency: next.currency || 'USD',
         });
         setWorkspaceName(next.workspace || 'VERTEX Studio');
@@ -77,20 +78,15 @@ export function Settings() {
 
   const handleWipeSubmit = guardWipe(async (e) => {
     e.preventDefault();
-    const pass = e.target.wipePassword.value;
-    if (!pass) {
-      setWipeError('Password is required to wipe data.');
+    const confirmation = e.target.wipeConfirm.value.trim();
+
+    if (confirmation !== 'DELETE') {
+      setWipeError('Type DELETE to confirm. Workspace remains untouched.');
       return;
     }
 
-    const isValid = validateUserCredentials(username, pass);
-
-    if (isValid) {
-      await wipeStorage();
-      window.location.replace('/');
-    } else {
-      setWipeError('Master Sequence (Password) validation failed. Workspace remains locked.');
-    }
+    await wipeStorage();
+    window.location.replace('/');
   });
 
   const handleSaveProfile = (e) => {
@@ -100,6 +96,8 @@ export function Settings() {
       email: profileForm.email,
       bio: profileForm.bio,
       profession: profileForm.profession,
+      domain: profileForm.domain,
+      tools: profileForm.tools,
       currency: profileForm.currency,
     });
     toast.success('Profile updated');
@@ -109,22 +107,6 @@ export function Settings() {
     e.preventDefault();
     saveUser(username, { workspace: workspaceName });
     toast.success('Workspace updated');
-  };
-
-  const handleChangePassword = (e) => {
-    e.preventDefault();
-    setSecurityError('');
-    if (!securityForm.next || securityForm.next !== securityForm.confirm) {
-      setSecurityError('New password and confirmation must match.');
-      return;
-    }
-    if (!validateUserCredentials(username, securityForm.current)) {
-      setSecurityError('Current password is incorrect.');
-      return;
-    }
-    saveUser(username, { password: securityForm.next });
-    setSecurityForm({ current: '', next: '', confirm: '' });
-    toast.success('Workspace password updated', 'This does not change the API master key in .env.');
   };
 
   return (
@@ -176,6 +158,14 @@ export function Settings() {
                   <div className="form-group">
                     <label>Craft / Profession</label>
                     <Input value={profileForm.profession} onChange={(e) => setProfileForm({ ...profileForm, profession: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Primary Domain</label>
+                    <Input value={profileForm.domain} onChange={(e) => setProfileForm({ ...profileForm, domain: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Key Tools</label>
+                    <Input value={profileForm.tools} onChange={(e) => setProfileForm({ ...profileForm, tools: e.target.value })} />
                   </div>
                   <div className="form-group">
                     <label>Currency</label>
@@ -255,7 +245,7 @@ export function Settings() {
                       <p>Permanently delete everything and start with a clean slate.</p>
                     </div>
                     <Button variant="destructive" onClick={() => setIsWipeModalOpen(true)}>
-                      <Trash2 size={16} /> Master Reset
+                      <Trash2 size={16} /> Wipe Workspace
                     </Button>
                   </div>
                 </div>
@@ -287,41 +277,15 @@ export function Settings() {
             </Card>
           )}
 
-          {activeTab === 'security' && (
-            <Card className="settings-card">
-              <CardHeader>Change Workspace Password</CardHeader>
-              <CardContent>
-                <p className="settings-card-desc">Updates the password used for wipe confirmation and other sensitive local actions. It does not rewrite the API master key in `.env`.</p>
-                <form className="settings-form" onSubmit={handleChangePassword}>
-                  <div className="form-group">
-                    <label>Current Password</label>
-                    <Input type="password" value={securityForm.current} onChange={(e) => setSecurityForm({ ...securityForm, current: e.target.value })} required />
-                  </div>
-                  <div className="form-group">
-                    <label>New Password</label>
-                    <Input type="password" value={securityForm.next} onChange={(e) => setSecurityForm({ ...securityForm, next: e.target.value })} required />
-                  </div>
-                  <div className="form-group">
-                    <label>Confirm New Password</label>
-                    <Input type="password" value={securityForm.confirm} onChange={(e) => setSecurityForm({ ...securityForm, confirm: e.target.value })} required />
-                  </div>
-                  {securityError && <p className="text-danger">{securityError}</p>}
-                  <div className="form-actions">
-                    <Button type="submit" variant="primary"><Lock size={16} /> Update Password</Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
 
-      <Modal isOpen={isWipeModalOpen} onClose={() => setIsWipeModalOpen(false)} title="Master Reset">
+      <Modal isOpen={isWipeModalOpen} onClose={() => setIsWipeModalOpen(false)} title="Wipe Workspace">
         <form onSubmit={handleWipeSubmit} className="flex-col gap-md">
           <p className="text-secondary" style={{ marginBottom: '16px', lineHeight: 1.5 }}>
             <strong>WARNING:</strong> This action is irreversible. All of your clients, projects, tasks, and settings will be permanently erased.
           </p>
-          <Input name="wipePassword" type="password" placeholder="Master Sequence (Password)" autoFocus required />
+          <Input name="wipeConfirm" placeholder='Type "DELETE" to confirm' autoFocus required />
           {wipeError && <p className="text-danger" style={{ fontSize: '14px', margin: 0 }}>{wipeError}</p>}
           <Button type="submit" variant="destructive" style={{ marginTop: '8px' }} disabled={isWiping}>
             {isWiping ? 'Purging…' : 'Confirm Purge'}

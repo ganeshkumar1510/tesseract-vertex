@@ -15,7 +15,7 @@ import { useQueryParams } from '../hooks/useQueryParams';
 import './Clients.css';
 
 export function Clients() {
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useState(() => getData('clients') || []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', company: '' });
   const { getParam, setParam } = useQueryParams();
@@ -30,13 +30,14 @@ export function Clients() {
   }, []);
 
   useEffect(() => {
-    loadClients();
     const onDataChange = (e) => {
-      if (!e.detail?.key || e.detail.key === 'clients') loadClients();
+      if (!e.detail?.key || e.detail.key === 'clients') {
+        setClients(getData('clients') || []);
+      }
     };
     window.addEventListener('vertex-data-change', onDataChange);
     return () => window.removeEventListener('vertex-data-change', onDataChange);
-  }, [loadClients]);
+  }, []);
 
   const closeModal = () => {
     setIsModalOpen(false);

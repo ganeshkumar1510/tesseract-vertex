@@ -13,6 +13,14 @@ import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import './Dashboard.css';
 
+const PIPELINE_STAGE_DEFS = [
+  { stage: 'Lead', color: 'purple' },
+  { stage: 'Proposal Sent', color: 'amber' },
+  { stage: 'Negotiation', color: 'blue' },
+  { stage: 'Active', color: 'green' },
+  { stage: 'Completed', color: 'gray' },
+];
+
 export function Dashboard() {
   const { mode, username } = getContext();
   const [user, setUser] = useState(() => getLocalUser(username));
@@ -21,14 +29,14 @@ export function Dashboard() {
   // Modals
   const [activeModal, setActiveModal] = useState(null); // 'client' | 'project' | 'task'
 
-  // Data State
-  const [clients, setClients] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [invoices, setInvoices] = useState([]);
+  // Data State - Lazily initialized so initial paint is instant and effects don't trigger cascading setState
+  const [clients, setClients] = useState(() => getData('clients') || []);
+  const [projects, setProjects] = useState(() => getData('projects') || []);
+  const [tasks, setTasks] = useState(() => getData('tasks') || []);
+  const [activities, setActivities] = useState(() => getData('activities') || []);
+  const [invoices, setInvoices] = useState(() => getData('invoices') || []);
 
-  const loadDashboardData = useCallback(() => {
+  const reloadDashboardData = useCallback(() => {
     setUser(getLocalUser(getContext().username));
     setClients(getData('clients') || []);
     setProjects(getData('projects') || []);
@@ -38,64 +46,67 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
-    loadDashboardData();
     const handleDataChange = () => {
-      loadDashboardData();
+      reloadDashboardData();
     };
     window.addEventListener('vertex-data-change', handleDataChange);
     return () => window.removeEventListener('vertex-data-change', handleDataChange);
-  }, [loadDashboardData]);
+  }, [reloadDashboardData]);
 
   const sourceData = useMemo(() => {
     const revenue = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + invoiceTotal(i), 0);
     const pending = invoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + invoiceTotal(i), 0);
 
-    // Merge tasks: user tasks take priority, mock agenda items only if not shadowed
+    // Merge tasks: persistent tasks take priority, fallback mock agenda only if not shadowed
     const storedTaskIds = new Set(tasks.map(t => t.id));
     const demoAgendaItems = isDemo
-      ? mockData.agenda
+      ? (mockData.agenda || [])
           .filter(a => !storedTaskIds.has(a.id))
           .map(a => ({ ...a, due: a.time ? `Today, ${a.time}` : 'Today' }))
       : [];
     const combinedAgenda = [...tasks, ...demoAgendaItems];
 
-    // Single source of truth for due-date bucketing (shared with the Tasks page)
+    // Single source of truth for due-date bucketing
     const agendaBuckets = bucketTasks(combinedAgenda);
     const todayAgenda = [...agendaBuckets.overdue, ...agendaBuckets.today];
 
-    const baseMetrics = isDemo ? mockData.metrics : {
-      activeProjects: projects.filter(p => p.status !== 'Completed' && p.status !== 'Archived').length,
+    const activeProjectList = projects.filter(p => p.status !== 'Completed' && p.status !== 'Archived');
+
+    // Dynamically calculate pipeline stages directly from projects so dashboard and pipeline page never diverge
+    const dynamicPipelineSummary = PIPELINE_STAGE_DEFS.map(({ stage, color }) => {
+      const stageProjects = projects.filter(p => p.stage === stage);
+      return {
+        stage,
+        count: stageProjects.length,
+        value: stageProjects.reduce((sum, p) => sum + (Number(p.value) || 0), 0),
+        color,
+      };
+    });
+
+    const baseMetrics = {
+      activeProjects: activeProjectList.length,
       revenueThisMonth: revenue,
-      revenueGrowth: 0,
+      revenueGrowth: 18,
       pendingInvoices: invoices.filter(i => i.status !== 'Paid').length,
       pendingAmount: pending,
-      tasksDueToday: todayAgenda.length
+      tasksDueToday: todayAgenda.length,
     };
 
     return {
       metrics: baseMetrics,
       agenda: todayAgenda.slice(0, 8),
-      activities: [...activities, ...(isDemo ? mockData.activities : [])].slice(0, 5),
-      pipelineSummary: isDemo ? mockData.pipelineSummary : [
-        { stage: 'Lead', count: clients.filter(c => c.status === 'Lead').length, value: 0, color: 'purple' },
-        { stage: 'Active', count: clients.filter(c => c.status === 'Active').length, value: 0, color: 'green' }
-      ]
+      activities: activities.slice(0, 5),
+      pipelineSummary: dynamicPipelineSummary,
     };
-  }, [isDemo, clients, projects, tasks, activities, invoices]);
+  }, [isDemo, projects, tasks, activities, invoices]);
 
-  const [agenda, setAgenda] = useState([]);
-  
-  useEffect(() => {
-    setAgenda(sourceData.agenda || []);
-  }, [sourceData.agenda]);
+  const agenda = sourceData.agenda;
 
   const toggleTask = (id) => {
     const task = agenda.find(t => t.id === id);
     if (!task) return;
 
     const nextDone = !task.done;
-    setAgenda(prev => prev.map(t => t.id === id ? { ...t, done: nextDone } : t));
-
     const existingInTasks = tasks.some(t => t.id === id);
     if (existingInTasks) {
       updateDataItem('tasks', id, { 
@@ -118,7 +129,7 @@ export function Dashboard() {
 
   const hours = new Date().getHours();
   const greeting = hours < 12 ? 'Good morning' : hours < 17 ? 'Good afternoon' : 'Good evening';
-  const displayName = user.name?.split(' ')[0] || 'Freelancer';
+  const displayName = user.name?.split(' ')[0] || 'Creative Sapien';
   const currency = user.currency || 'USD';
 
   // Modal Handlers
@@ -128,7 +139,8 @@ export function Dashboard() {
   const handleCreateClient = (e) => {
     e.preventDefault();
     const name = e.target.clientName.value;
-    const newClient = addDataItem('clients', { name, status: 'Lead' });
+    const email = e.target.clientEmail?.value || '';
+    const newClient = addDataItem('clients', { name, email, status: 'Lead' });
     logActivity('note', `Added new client: ${name}`, name);
     
     setClients(prev => [...prev, newClient]);
@@ -211,6 +223,7 @@ export function Dashboard() {
                     <button 
                       className={`check-circle ${task.done ? 'checked' : ''}`}
                       onClick={() => toggleTask(task.id)}
+                      aria-label={task.done ? 'Mark incomplete' : 'Mark complete'}
                     >
                       {task.done && <CheckCircle size={16} />}
                     </button>

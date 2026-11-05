@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -27,13 +27,8 @@ export function ClientDetail() {
   const logInputRef = useRef(null);
   const currency = getCurrency();
 
-  const [client, setClient] = useState(null);
-  const [notFound, setNotFound] = useState(false);
+  const [dataVersion, setDataVersion] = useState(0);
   const [activeTab, setActiveTab] = useState('timeline'); // 'timeline' | 'projects' | 'invoices' | 'notes'
-  
-  const [projects, setProjects] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [activities, setActivities] = useState([]);
   
   // Quick Log State
   const [logText, setLogText] = useState('');
@@ -48,23 +43,31 @@ export function ClientDetail() {
   const toast = useToast();
   const { isSubmitting, guard } = useSubmitGuard();
 
-  const loadClientData = useCallback(() => {
+  useEffect(() => {
+    const handleDataChange = (e) => {
+      const key = e.detail?.key;
+      if (!key || ['clients', 'projects', 'invoices', 'activities', 'user'].includes(key)) {
+        setDataVersion(v => v + 1);
+      }
+    };
+    window.addEventListener('vertex-data-change', handleDataChange);
+    return () => window.removeEventListener('vertex-data-change', handleDataChange);
+  }, []);
+
+  const { notFound, client, projects, invoices, activities } = useMemo(() => {
+    // referenced to trigger recomputation on data changes
+    void dataVersion;
     const allClients = getData('clients') || [];
     const found = allClients.find(c => c.id === id);
 
     if (!found) {
-      setNotFound(true);
-      return;
+      return { notFound: true, client: null, projects: [], invoices: [], activities: [] };
     }
-
-    setNotFound(false);
-    setClient(found);
 
     const allProjects = getData('projects') || [];
     const allInvoices = getData('invoices') || [];
     const allActivities = getData('activities') || [];
 
-    // Filter projects linked to this client
     const clientProjects = allProjects.filter(p => 
       p.client_id === found.id ||
       (found.name && p.client === found.name) ||
@@ -72,7 +75,6 @@ export function ClientDetail() {
       (p.client && p.client.includes(found.name))
     );
 
-    // Filter invoices linked to this client
     const clientInvoices = allInvoices.filter(i => 
       i.client_id === found.id ||
       (found.name && i.client === found.name) ||
@@ -80,29 +82,20 @@ export function ClientDetail() {
       (i.client && i.client.includes(found.name))
     );
 
-    // Filter activities linked to this client
     const clientActivities = allActivities.filter(a => 
       a.clientId === found.id ||
       (found.name && a.company === found.name) ||
       (found.company && a.company === found.company)
     );
 
-    setProjects(clientProjects);
-    setInvoices(clientInvoices);
-    setActivities(clientActivities);
-  }, [id]);
-
-  useEffect(() => {
-    loadClientData();
-    const handleDataChange = (e) => {
-      const key = e.detail?.key;
-      if (!key || ['clients', 'projects', 'invoices', 'activities', 'user'].includes(key)) {
-        loadClientData();
-      }
+    return {
+      notFound: false,
+      client: found,
+      projects: clientProjects,
+      invoices: clientInvoices,
+      activities: clientActivities,
     };
-    window.addEventListener('vertex-data-change', handleDataChange);
-    return () => window.removeEventListener('vertex-data-change', handleDataChange);
-  }, [loadClientData]);
+  }, [id, dataVersion]);
 
   // Calculations
   const stats = useMemo(() => {
@@ -132,7 +125,7 @@ export function ClientDetail() {
     if (!logText.trim() || !client) return;
 
     const companyTarget = client.company || client.name;
-    const newAct = addDataItem('activities', {
+    addDataItem('activities', {
       type: logType.toLowerCase(),
       description: logText.trim(),
       company: companyTarget,
@@ -140,7 +133,6 @@ export function ClientDetail() {
       time: 'Just now'
     });
 
-    setActivities(prev => [newAct, ...prev]);
     setLogText('');
     toast.success(`${logType} logged`);
   };
@@ -179,7 +171,6 @@ export function ClientDetail() {
 
     logActivity('note', `Created project: ${newProject.name}`, client.company || client.name);
     closeProjectModal();
-    loadClientData();
     toast.success('Project created', newProject.name);
   });
 

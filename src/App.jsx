@@ -13,18 +13,13 @@ import { ClientDetail } from './pages/ClientDetail';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Settings } from './pages/Settings';
 import { InitialSetup } from './pages/InitialSetup';
-import { Login } from './pages/Login';
 
-// ── Auth Guard ───────────────────────────────────────────────────────────────
+// ── Setup Guard ──────────────────────────────────────────────────────────────
 const ProtectedRoute = ({ children }) => {
-  const { isSetupComplete, authToken } = useAppStore();
+  const { isSetupComplete } = useAppStore();
 
   if (!isSetupComplete) {
     return <Navigate to="/setup" replace />;
-  }
-
-  if (!authToken) {
-    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -55,30 +50,27 @@ function CRMShell() {
 // ── Root App ─────────────────────────────────────────────────────────────────
 
 function App() {
-  const { isSetupComplete, authToken } = useAppStore();
+  const { isSetupComplete } = useAppStore();
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Root Redirect Logic */}
-        <Route path="/" element={
-          !isSetupComplete ? <Navigate to="/setup" replace /> :
-          !authToken ? <Navigate to="/login" replace /> :
-          <Navigate to="/dashboard" replace />
-        } />
-        
-        {/* Initial Setup Flow */}
-        <Route path="/setup" element={
-          isSetupComplete ? <Navigate to="/" replace /> : <InitialSetup />
-        } />
+        {/* Root redirect */}
+        <Route
+          path="/"
+          element={<Navigate to={isSetupComplete ? '/dashboard' : '/setup'} replace />}
+        />
 
-        {/* Master Key Login */}
-        <Route path="/login" element={
-          !isSetupComplete ? <Navigate to="/setup" replace /> :
-          authToken ? <Navigate to="/dashboard" replace /> : <Login />
-        } />
-        
-        {/* Main Application Routes */}
+        {/* Local setup flow */}
+        <Route
+          path="/setup"
+          element={isSetupComplete ? <Navigate to="/dashboard" replace /> : <InitialSetup />}
+        />
+
+        {/* Legacy auth route — the local demo has no login gate */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+
+        {/* Main application routes */}
         <Route path="/*" element={<CRMShell />} />
       </Routes>
     </BrowserRouter>

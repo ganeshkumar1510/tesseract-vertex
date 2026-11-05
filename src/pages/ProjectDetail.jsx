@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -37,15 +37,11 @@ export function ProjectDetail() {
   const navigate = useNavigate();
   const currency = getCurrency();
 
-  const [project, setProject] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [invoices, setInvoices] = useState([]);
+  const [dataVersion, setDataVersion] = useState(0);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'timeline' | 'tasks' | 'invoices'
   const [vibe, setVibe] = useState('excellent');
   const [isEditing, setIsEditing] = useState(false);
   const [noteText, setNoteText] = useState('');
-  const [notFound, setNotFound] = useState(false);
 
   const toast = useToast();
 
@@ -55,24 +51,31 @@ export function ProjectDetail() {
   const [taskPriority, setTaskPriority] = useState('Medium');
   const [taskDueDate, setTaskDueDate] = useState('');
 
-  const loadProjectData = useCallback(() => {
+  useEffect(() => {
+    const handleDataChange = (e) => {
+      const key = e.detail?.key;
+      if (!key || ['projects', 'tasks', 'activities', 'invoices', 'user'].includes(key)) {
+        setDataVersion(v => v + 1);
+      }
+    };
+    window.addEventListener('vertex-data-change', handleDataChange);
+    return () => window.removeEventListener('vertex-data-change', handleDataChange);
+  }, []);
+
+  const { notFound, project, activities, tasks, invoices } = useMemo(() => {
+    void dataVersion;
     const allProjects = getData('projects') || [];
     const foundProject = allProjects.find(p => p.id === id);
 
     if (!foundProject) {
-      setNotFound(true);
-      return;
+      return { notFound: true, project: null, activities: [], tasks: [], invoices: [] };
     }
-
-    setNotFound(false);
-    setProject(foundProject);
 
     const allActivities = getData('activities') || [];
     const projActivities = allActivities.filter(a => 
       a.projectId === id || 
       (foundProject.name && a.description && a.description.includes(foundProject.name))
     );
-    setActivities(projActivities);
 
     const allTasks = getData('tasks') || [];
     const projTasks = allTasks.filter(t => 
@@ -81,7 +84,6 @@ export function ProjectDetail() {
       (foundProject.name && t.project === foundProject.name) ||
       (foundProject.title && t.project === foundProject.title)
     );
-    setTasks(projTasks);
 
     const allInvoices = getData('invoices') || [];
     const projInvoices = allInvoices.filter(i => 
@@ -89,32 +91,25 @@ export function ProjectDetail() {
       (foundProject.name && i.project === foundProject.name) ||
       (foundProject.title && i.project === foundProject.title)
     );
-    setInvoices(projInvoices);
-  }, [id]);
 
-  useEffect(() => {
-    loadProjectData();
-    const handleDataChange = (e) => {
-      const key = e.detail?.key;
-      if (!key || ['projects', 'tasks', 'activities', 'invoices', 'user'].includes(key)) {
-        loadProjectData();
-      }
+    return {
+      notFound: false,
+      project: foundProject,
+      activities: projActivities,
+      tasks: projTasks,
+      invoices: projInvoices,
     };
-    window.addEventListener('vertex-data-change', handleDataChange);
-    return () => window.removeEventListener('vertex-data-change', handleDataChange);
-  }, [loadProjectData]);
+  }, [id, dataVersion]);
 
   const handleUpdateProject = (updates, { silent = false } = {}) => {
     const updated = updateDataItem('projects', id, updates);
-    if (updated) {
-      setProject(updated);
-      if (!silent) {
-        toast.success('Project updated', 'Project details saved.');
-      }
+    if (updated && !silent) {
+      toast.success('Project updated', 'Project details saved.');
     }
   };
 
   const handleAddActivity = (type, description) => {
+    if (!project) return;
     const newActivity = {
       type,
       description,
@@ -122,8 +117,7 @@ export function ProjectDetail() {
       company: project.client || 'General',
       time: 'Just now'
     };
-    const added = addDataItem('activities', newActivity);
-    setActivities(prev => [added, ...prev]);
+    addDataItem('activities', newActivity);
   };
 
   const handleAddNote = () => {
@@ -155,8 +149,7 @@ export function ProjectDetail() {
       createdAt: new Date().toISOString()
     };
 
-    const added = addDataItem('tasks', newTask);
-    setTasks(prev => [added, ...prev]);
+    addDataItem('tasks', newTask);
     handleAddActivity('Task', `Created task: ${newTask.title}`);
     setIsTaskModalOpen(false);
     setTaskTitle('');
@@ -175,11 +168,8 @@ export function ProjectDetail() {
       completedAt: nextDone ? new Date().toISOString() : null
     });
 
-    if (updated) {
-      setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
-      if (nextDone) {
-        handleAddActivity('System', `Task completed: ${task.title}`);
-      }
+    if (updated && nextDone) {
+      handleAddActivity('System', `Task completed: ${task.title}`);
     }
   };
 

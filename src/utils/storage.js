@@ -8,7 +8,6 @@ const KEYS = {
   ACTIVE_CONTEXT: 'vtx_active_context', // 'normal' | 'test' | 'demo'
   ACTIVE_USERNAME: 'vtx_active_username',
   USERS: 'vtx_users', // Store created human users
-  STORAGE_MODE: 'vtx_storage_mode', // 'local' | 'cloud' (null = unknown/legacy)
 };
 
 // ── Context Management ───────────────────────────────────────────────────────
@@ -23,39 +22,6 @@ export function getContext() {
     mode: localStorage.getItem(KEYS.ACTIVE_CONTEXT) || 'normal',
     username: localStorage.getItem(KEYS.ACTIVE_USERNAME) || ''
   };
-}
-
-// ── Storage Mode (local-only vs cloud) ───────────────────────────────────────
-
-/** Returns 'local', 'cloud', or null when unknown (legacy installs). */
-export function getStorageMode() {
-  return localStorage.getItem(KEYS.STORAGE_MODE);
-}
-
-export function setStorageMode(mode) {
-  if (mode) localStorage.setItem(KEYS.STORAGE_MODE, mode);
-}
-
-// ── Validation ───────────────────────────────────────────────────────────────
-
-/**
- * Validates a user's password/PIN for sensitive actions.
- * In a local-first app, this checks the stored user hash/string.
- */
-export function validateUserCredentials(username, password) {
-  // Dev-only master override. VITE_* values ship inside the client bundle,
-  // so this must never act as a bypass in production builds.
-  const adminPin = import.meta.env.VITE_ADMIN_PIN;
-  if (import.meta.env.DEV && adminPin && password === adminPin) return 'system_admin';
-
-  const users = JSON.parse(localStorage.getItem(KEYS.USERS) || '{}');
-  const user = users[username];
-  
-  if (!user) return null;
-
-  // Basic check for MVP
-  if (user.password === password) return username;
-  return null;
 }
 
 // ── Data Fetching Helper ─────────────────────────────────────────────────────

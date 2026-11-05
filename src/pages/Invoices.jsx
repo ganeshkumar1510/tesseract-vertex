@@ -24,13 +24,24 @@ export function Invoices() {
   const user = getLocalUser(username);
   const currency = user.currency || 'USD';
 
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] = useState(() => getData('invoices') || []);
   const [clients, setClients] = useState(() => getData('clients') || []);
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(() => getData('projects') || []);
 
   // Form State
-  const [selectedClientId, setSelectedClientId] = useState(() => getParam('client') || '');
-  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState(() => {
+    const urlClient = getParam('client');
+    if (urlClient) return urlClient;
+    const initialClients = getData('clients') || [];
+    return initialClients[0]?.id || '';
+  });
+  const [selectedProjectId, setSelectedProjectId] = useState(() => {
+    const initialClients = getData('clients') || [];
+    const initialProjects = getData('projects') || [];
+    const cId = getParam('client') || initialClients[0]?.id || '';
+    const match = initialProjects.find(p => p.client_id === cId);
+    return match?.id || '';
+  });
   const [lineItems, setLineItems] = useState(() => [createLineItem()]);
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(() => {
@@ -44,20 +55,12 @@ export function Invoices() {
   const { isSubmitting, guard } = useSubmitGuard();
 
   const loadAllData = useCallback(() => {
-    const invList = getData('invoices') || [];
-    const clientList = getData('clients') || [];
-    const projList = getData('projects') || [];
-    setInvoices(invList);
-    setClients(clientList);
-    setProjects(projList);
-
-    if (clientList.length > 0 && !selectedClientId) {
-      setSelectedClientId(clientList[0].id);
-    }
-  }, [selectedClientId]);
+    setInvoices(getData('invoices') || []);
+    setClients(getData('clients') || []);
+    setProjects(getData('projects') || []);
+  }, []);
 
   useEffect(() => {
-    loadAllData();
     const handleDataChange = (e) => {
       const key = e.detail?.key;
       if (!key || ['invoices', 'clients', 'projects', 'user'].includes(key)) {
@@ -77,15 +80,6 @@ export function Invoices() {
       (client && (p.client === client.name || p.client === client.company))
     );
   }, [selectedClientId, clients, projects]);
-
-  // Keep selected project in sync with client selection
-  useEffect(() => {
-    if (availableProjects.length > 0) {
-      setSelectedProjectId(availableProjects[0].id);
-    } else {
-      setSelectedProjectId('');
-    }
-  }, [availableProjects]);
 
   // Metrics
   const totalOutstanding = useMemo(() => {
@@ -293,7 +287,14 @@ export function Invoices() {
                 className="w-full bg-surface border border-border-subtle rounded-md px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
                 value={selectedClientId}
                 onChange={(e) => {
-                  setSelectedClientId(e.target.value);
+                  const newClientId = e.target.value;
+                  setSelectedClientId(newClientId);
+                  const client = clients.find(c => c.id === newClientId);
+                  const matching = projects.filter(p => 
+                    p.client_id === newClientId ||
+                    (client && (p.client === client.name || p.client === client.company))
+                  );
+                  setSelectedProjectId(matching[0]?.id || '');
                   if (formError) setFormError('');
                   markDirty();
                 }}
